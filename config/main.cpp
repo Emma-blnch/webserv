@@ -4,27 +4,37 @@
 
 void    ServerConfig::displayConfig() const {
     for (size_t i = 0; i < _servers.size(); ++i){
-        std::cout << "Server Block " << i << ":\n";
+        std::cout << "Server n°" << i << ":\n\n";
         for (size_t j = 0; j < _servers[i].directives.size(); ++j){
-            std::cout << "Server directive "<< j <<" (dir value) :" << _servers[i].directives[j].key << " "<< _servers[i].directives[j].value << "\n";
+            std::cout << "s_dir "<< j << ": " << _servers[i].directives[j].key << " " << _servers[i].directives[j].value << "\n";
         }
-        std::cout << "Locations :\n";
+        if (_servers[i].locations.size())
+            std::cout << "\n";
         for (size_t j = 0; j < _servers[i].locations.size(); ++j){
-            std::cout << "Location "<< j << ": path = "; 
-            std::cout << _servers[i].locations[j].path << "; ";
-            for (size_t k = 0; k < _servers[i].locations[j].directives.size(); ++k)
-            {
-                std::cout << "directive "<< k << " (dir value) :" << _servers[i].locations[j].directives[k].key << " "<<  _servers[i].locations[j].directives[k].key << "\n" ; 
+            std::cout << "s_location n°" << i << ":\n";
+            for (size_t k = 0; k < _servers[i].locations[j].directives.size(); ++k){
+                std::cout << "l_dir " << k <<": " << _servers[i].locations[j].directives[k].key << " " << _servers[i].locations[j].directives[k].value << "\n";
             }
         }
     }
 }
 
-int main() {
+void    splitTester(std::string line) {
+    std::vector<std::string> array = splitLine(line, " \n\r");
+    for (std::vector<std::string>::const_iterator i = array.begin(); i != array.end(); ++i)
+        std::cout << *i << std::endl;
+}
+
+int main(int ac, char **argv) {
     ServerConfig config;
 
-    config.parseFile("nginx.conf");
-    config.displayConfig();
-    
+    if (ac != 2)
+        return 0;
+    std::string conf = argv[1];
+    if (!config.parseConfigFile(conf))
+        return 0;
+    // config.displayConfig();
+    // splitTester("         bonjour TOUT D   le778 monde  \n");
+
     return 0;
 }

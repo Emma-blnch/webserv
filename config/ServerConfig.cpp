@@ -1,127 +1,208 @@
 #include "ServerConfig.hpp"
-#include <fstream>
-#include <iostream>
 
-
-bool    ServerConfig::isBlockStart(const std::string& line){
-    return line.find("{") != std::string::npos;
+bool    ServerConfig::isServerBlockStart(std::vector<std::string> tokens)
+{
+    return ((tokens.size() == 2 && tokens[0] == "server" && tokens[1] == "{")
+    || (tokens.size() == 1 && tokens[0] == "server{"));
 }
 
-bool    ServerConfig::isDirective(const std::string& line){
-    return line.find(";") != std::string::npos;
+bool    ServerConfig::isLocationBlockStart(std::vector<std::string> tokens)
+{
+    if (tokens.size() == 3 && tokens[0] == "location" && tokens[2] == "{"){
+        return true;
+    }
+    return false;
 }
 
-bool    ServerConfig::isBlockEnd(const std::string& line){
-    return line.find("}") != std::string::npos;
+bool    ServerConfig::isBlockEnd(const std::string& line)
+{
+    std::string trimmedLine = removeEndSpaces(line);
+    return (trimmedLine == "}");
 }
 
 
-std::string ServerConfig::removeSpaces(const std::string& line){
-    if (line.empty()) // bool true if len = 0
-        return line;
-    
-    size_t first = 0;
-    while (first < line.length() && std::isspace(line[first]))
-        first++;
-    if (first == line.length())
-        return ("");
-
-    size_t last = line.length() - 1;
-    while (std::isspace(line[last]))
-        last--;
-    return line.substr(first, last - first + 1);
+bool    ServerConfig::isDirective(const std::string& line)
+{
+    return line.find(';' != std::string::npos);
 }
 
-std::pair<std::string, std::string>    ServerConfig::parseDirective(const std::string& line){
-    std::pair<std::string, std::string> pair;
+std::pair<std::string, std::string> ServerConfig::parseDirective(const std::string& line)
+{
+    std::pair<std::string, std::string> result;
 
     std::string cleanLine = line;
-
     size_t  semiColonPos = cleanLine.find(';');
-    if (semiColonPos != std::string::npos){
+    if (semiColonPos != std::string::npos)
         cleanLine = cleanLine.substr(0, semiColonPos);
+    std::vector<std::string> tokens = splitLine(cleanLine, " \t");
+    if (tokens.empty())
+        return result;
+    result.first = tokens[0];
+    if (tokens.size() > 1){
+        result.second = tokens[1];
+        for (size_t i = 2; i < tokens.size(); ++i){
+            result.second += " " + tokens[i];
+        }
     }
-    if (cleanLine.empty()){
-        std::cout << "Empty directive\n";
-    }
-    size_t  spacePos = cleanLine.find_first_of(" \t");
-    if (spacePos != std::string::npos){
-        pair.first = cleanLine;
-        pair.second = removeSpaces(cleanLine.substr(spacePos));
-    } else {
-        pair.first = cleanLine;
-        pair.second = "";
-    }
-    return pair;
+    return result;
 }
 
-bool    ServerConfig::parseFile(const std::string& filename){
-    std::ifstream   file(filename.c_str());
-
-    if (!file.is_open())
+bool    ServerConfig::extractDirective(std::string& line, Directive& dir)
+{
+    std::pair<std::string, std::string> directive = parseDirective(line);
+    if (directive.first.empty())
     {
-        std::cout << "Cannot open the file\n";
+        std::cout << "Erreur config: directive vide\n";
+        return false;
+    }
+    dir.key = directive.first;
+    dir.value = directive.second;
+    return true;
+}
+
+
+bool    ServerConfig::extractLocationBlockContent(LocationBlock& location, std::ifstream& file)
+{
+    std::string line;
+
+    while (std::getline(file, line))
+    {
+        line = removeEndSpaces(line);
+        if (line.empty() || line[0] == '#')
+        if (isBlockEnd(line))
+            return true;
+        if (isDirective(line)){
+            Directive directive;
+            if (!extractDirective(line, directive))
+                return false;
+            location.directives.push_back(directive);
+        }
+        else
+        {
+            std::cout << "Un bloc location ne doit contenir que des directives\n";
+            return false;
+        }
+    }
+    std::cout << "Erreur config: bloc location ouvert\n";
+    return false;
+}
+
+
+bool    ServerConfig::extractServerBlockContent(ServerBlock& server, std::ifstream& file)
+{
+    std::string line;
+    
+    while (std::getline(file, line))
+    {
+        line = removeEndSpaces(line);
+        if (line.empty() || line[0] == '#')
+            continue;
+        if (isBlockEnd(line))
+            return true;
+        std::vector<std::string>    tokens = splitLine(line, " \t");
+        if (isLocationBlockStart(tokens)){
+            LocationBlock   location;
+            std::string path = tokens[1];
+            location.path = path;
+            if (!extractLocationBlockContent(location, file))
+                return false;
+            server.locations.push_back(location);
+        }
+        else if (isDirective(line))
+        {
+            Directive   directive;
+            if (!extractDirective(line, directive))
+                return false;
+            server.directives.push_back(directive);
+            std::cout << "Server directive: " << directive.key << " " << directive.value << std::endl;
+        }
+        else
+        {
+            std::cout << "Un bloc serveur ne doit contenir que des directives et des blocs location\n";
+            return false;
+        }
+    }
+    std::cout << "Bloc server ouvert\n";
+    return false;
+}
+
+
+bool    ServerConfig::extractServerBlocks(std::ifstream& file)
+{
+    std::string line;
+    ServerBlock currentServer;
+
+    while (std::getline(file, line)){
+        line = removeEndSpaces(line);
+        if (line.empty() || line[0] == '#')
+            continue ;
+        std::vector<std::string>    tokens = splitLine(line, " \t");
+        if (!isServerBlockStart(tokens)){
+            std::cout << "Erreur config: n'écrire que dans les blocs server\n";
+            return false;
+        }
+        else
+        {
+            currentServer = ServerBlock();
+            if (!extractServerBlockContent(currentServer, file))
+                return false;
+            _servers.push_back(currentServer);
+            std::cout << "Added server block\n";
+        }
+    }
+    if (_servers.empty())
+    {
+        std::cout << "Erreur config: aucun serveur trouvé\n";
+        return false;
+    }
+    return true;
+}
+
+
+bool    ServerConfig::checkLocationBlock(const LocationBlock& location)
+{
+    (void)location;
+    return true;
+}
+
+bool    ServerConfig::checkServerBlock(const ServerBlock& server)
+{
+    // bool    hasListen = false;
+    // bool    hasHost = false;
+    // bool    hasClientMaxSize = false;
+    // bool    hasErrorPages = false;
+    // bool    hasServerName = false; // pas obligatoire
+    // TO DO
+
+    for (size_t i = 0; i < server.locations.size(); ++i){
+        if (!checkLocationBlock(server.locations[i]))
+            return false;
+    }
+    return true;
+}
+
+bool    ServerConfig::checkServers()
+{
+    for (size_t i = 0; i < _servers.size(); ++i){
+        if (!checkServerBlock(_servers[i]))
+            return false;
+    }
+    return true;
+}
+
+bool    ServerConfig::parseConfigFile(const std::string& filename)
+{
+    std::ifstream file(filename.c_str());
+
+    if (!file.is_open()){
+        std::cout << "Could not open "<< filename << "\n";
         return false;
     }
 
-    std::string line;
-    bool    inServerBlock = false;
-    bool    inLocationBlock = false;
-    ServerBlock currentServer;
-    LocationBlock   currentLocation;
-
-    while (std::getline(file, line)){ // std::getline(input, string, delimeter): par défaut délim est \n et n'est pas inclus
-        line = removeSpaces(line);
-        if (line.empty() || line[0] == '#')
-            continue;
-        if (!inServerBlock && line.find("server") != std::string::npos && isBlockStart(line)){
-            inServerBlock = true;
-            currentServer = ServerBlock(); // reset currentServer
-            continue ;
-        }
-        if (inServerBlock && !inLocationBlock && isBlockEnd(line))
-        {
-            inServerBlock = false;
-            _servers.push_back(currentServer); //on l'ajoute au vecteur de ServerBlocks
-            continue;
-        }
-        if (inServerBlock){
-            if (!inLocationBlock && line.find("location") != std::string::npos && isBlockStart(line)){
-                inLocationBlock = true;
-                currentLocation = LocationBlock();
-
-                size_t  startPos = line.find("location") + 8;
-                size_t  endPos = line.find('{');
-                if (endPos != std::string::npos){
-                    currentLocation.path = removeSpaces(line.substr(startPos, endPos - startPos));
-                }
-                continue;
-            }
-            if (inLocationBlock && isBlockEnd(line)){
-                inLocationBlock = false;
-                currentServer.locations.push_back(currentLocation);
-                continue ;
-            }
-        }
-
-        if (isDirective(line)){
-            std::pair<std::string, std::string> directive = parseDirective(line);
-            if (inLocationBlock) {
-                Directive dir;
-                dir.key = directive.first;
-                dir.value = directive.second;
-                currentLocation.directives.push_back(dir);
-                continue;
-            }
-            else {
-                Directive dir;
-                dir.key = directive.first;
-                dir.value = directive.second;
-                currentServer.directives.push_back(dir);
-                continue;
-            }
-        }
+    if (!extractServerBlocks(file)){
+        file.close();
+        return false;
     }
     file.close();
-    return true;
+    return checkServers();
 }

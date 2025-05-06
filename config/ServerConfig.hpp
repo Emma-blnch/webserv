@@ -4,6 +4,10 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <fstream>
+#include <iostream>
+#include "ParsingUtils.hpp"
+
 
 struct Directive{
     std::string key;
@@ -13,7 +17,7 @@ struct Directive{
 
 struct LocationBlock{
     std::string path;
-    std::vector<Directive> directives; 
+    std::vector<Directive> directives;
 };
 
 struct ServerBlock{
@@ -26,16 +30,30 @@ class ServerConfig {
     public:
         ServerConfig(){};
 
-        bool    parseFile(const std::string& filename);
+        bool    parseConfigFile(const std::string& filename);
+        bool    extractServerBlocks(std::ifstream& file);
+        bool    extractServerBlockContent(ServerBlock& server, std::ifstream& file);
+
+        std::pair<std::string, std::string> parseDirective(const std::string& line);
+        bool    extractDirective(std::string& line, Directive& dir);
+
+
+        bool    isLocationBlockStart(std::vector<std::string> tokens);
+        bool    extractLocationBlockContent(LocationBlock& location, std::ifstream& file);
+
+        bool    isDirective(const std::string& line);
+        bool    isServerBlockStart(std::vector<std::string> tokens);
+        bool    isBlockEnd(const std::string& line);
+
+        bool    checkServerBlock(const ServerBlock& server);
+        bool    checkLocationBlock(const LocationBlock& location);
+        bool    checkServers();
+
+        
         void    displayConfig() const;
         
     private:
         std::vector<ServerBlock> _servers;
-        std::string removeSpaces(const std::string& line);
-        bool    isDirective(const std::string& line);
-        bool    isBlockStart(const std::string& line);
-        bool    isBlockEnd(const std::string& line);
-        std::pair<std::string, std::string> parseDirective(const std::string& line);
 };
 
 #endif
