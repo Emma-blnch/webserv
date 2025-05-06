@@ -23,7 +23,7 @@ bool    ServerConfig::isBlockEnd(const std::string& line)
 
 bool    ServerConfig::isDirective(const std::string& line)
 {
-    return line.find(';' != std::string::npos);
+    return line.find(';') != std::string::npos;
 }
 
 std::pair<std::string, std::string> ServerConfig::parseDirective(const std::string& line)
@@ -71,6 +71,12 @@ bool    ServerConfig::extractLocationBlockContent(LocationBlock& location, std::
         if (line.empty() || line[0] == '#')
         if (isBlockEnd(line))
             return true;
+        std::vector<std::string>    tokens = splitLine(line, " \t");
+        if (isServerBlockStart(tokens)|| isLocationBlockStart(tokens))
+        {
+            std::cout << "Erreur config: bloc trouvé dans un bloc location\n";
+            return false;
+        }
         if (isDirective(line)){
             Directive directive;
             if (!extractDirective(line, directive))
@@ -79,7 +85,7 @@ bool    ServerConfig::extractLocationBlockContent(LocationBlock& location, std::
         }
         else
         {
-            std::cout << "Un bloc location ne doit contenir que des directives\n";
+            std::cout << "Erreur config: Un bloc location ne doit contenir que des directives\n";
             return false;
         }
     }
@@ -100,6 +106,10 @@ bool    ServerConfig::extractServerBlockContent(ServerBlock& server, std::ifstre
         if (isBlockEnd(line))
             return true;
         std::vector<std::string>    tokens = splitLine(line, " \t");
+        if (isServerBlockStart(tokens)){
+            std::cout << "Erreur config: un bloc server ne peut en contenir un autre\n";
+            return false;
+        }
         if (isLocationBlockStart(tokens)){
             LocationBlock   location;
             std::string path = tokens[1];
@@ -131,6 +141,7 @@ bool    ServerConfig::extractServerBlocks(std::ifstream& file)
 {
     std::string line;
     ServerBlock currentServer;
+    bool    inServerBlock = false;
 
     while (std::getline(file, line)){
         line = removeEndSpaces(line);
@@ -143,6 +154,7 @@ bool    ServerConfig::extractServerBlocks(std::ifstream& file)
         }
         else
         {
+            inServerBlock = true;
             currentServer = ServerBlock();
             if (!extractServerBlockContent(currentServer, file))
                 return false;
