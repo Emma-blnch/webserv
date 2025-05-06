@@ -1,0 +1,3 @@
+1 - Enlever tout ce qu'il ya  après # OK
+2 - Parser les directives du serveur
+3  - mm chose avec les location + vérifier path (tokens[1])

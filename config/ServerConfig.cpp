@@ -169,39 +169,6 @@ bool    ServerConfig::extractServerBlocks(std::ifstream& file)
 }
 
 
-bool    ServerConfig::checkLocationBlock(const LocationBlock& location)
-{
-    (void)location;
-    return true;
-}
-
-bool    ServerConfig::checkServerBlock(const ServerBlock& server)
-{
-    // bool    hasListen = false;
-    // bool    hasHost = false;
-    // bool    hasClientMaxSize = false;
-    // bool    hasErrorPages = false;
-    // bool    hasServerName = false; // pas obligatoire
-    // TO DO
-
-
-
-    for (size_t i = 0; i < server.locations.size(); ++i){
-        if (!checkLocationBlock(server.locations[i]))
-            return false;
-    }
-    return true;
-}
-
-bool    ServerConfig::checkServers()
-{
-    for (size_t i = 0; i < _servers.size(); ++i){
-        if (!checkServerBlock(_servers[i]))
-            return false;
-    }
-    return true;
-}
-
 bool    ServerConfig::parseConfigFile(const std::string& filename)
 {
     std::ifstream file(filename.c_str());
@@ -216,5 +183,5 @@ bool    ServerConfig::parseConfigFile(const std::string& filename)
         return false;
     }
     file.close();
-    return checkServers();
+    return checkServers(); // checkServerBlock.cpp
 }

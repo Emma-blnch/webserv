@@ -4,7 +4,9 @@ CPPFLAGS = -Wall -Wextra -Werror -std=c++98
 
 SRC = main.cpp \
 	ServerConfig.cpp \
-	ParsingUtils.cpp
+	ParsingUtils.cpp \
+	checkServerBlock.cpp \
+	checkLocationBlock.cpp
 
 OBJ = ${SRC:%.cpp=obj/%.o}
 

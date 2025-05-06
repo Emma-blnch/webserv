@@ -49,6 +49,9 @@ class ServerConfig {
         bool    checkLocationBlock(const LocationBlock& location);
         bool    checkServers();
 
+        bool    isValidPort(const Directive& directive);
+        bool    isValidClientBodySize(const Directive& directive);
+
         
         void    displayConfig() const;
         
