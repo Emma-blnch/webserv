@@ -1,4 +1,5 @@
 #include "Request.hpp"
+#include "utils.hpp"
 
 void Request::parseRequestLine(const std::string& line) {
     if (line.empty())
@@ -31,14 +32,9 @@ void Request::parseRequestLine(const std::string& line) {
     _version = line.substr(start);
     if (_version.substr(0, 5) != "HTTP/")
         throw std::runtime_error("Invalid HTTP version");
+    if (_version != "HTTP/1.1")
+        throw std::runtime_error("Unsupported HTTP version: " + _version);
 }
-
-std::string toLower(const std::string& s) {
-    std::string out = s;
-    std::transform(out.begin(), out.end(), out.begin(), ::tolower);
-    return out;
-}
-
 
 void Request::parseHeaderLine(const std::string& line) {
     size_t colon = line.find(": ");
@@ -126,34 +122,3 @@ std::string Request::getHeader(const std::string& key) const {
 std::string Request::getBody() const {
     return _body;
 }
-
-// void Request::parseRawRequest(const std::string& req) {
-//     std::istringstream stream(req); // transforme req en flux
-//     std::string line;
-//     std::string body;
-//     bool isFirstLine = true;
-//     bool inHeader = true;
-
-//     while(std::getline(stream, line))
-//     {
-//         if (!line.empty() && line[line.size() - 1] == '\r') // vire manuellement le '\r' car lignes HTTP finissent par '\r\n' mais getline supp que '\n'
-//             line.erase(line.size() - 1);
-        
-//         if (isFirstLine) {
-//             parseRequestLine(line);
-//             isFirstLine = false;
-//         }
-//         else if (inHeader) {
-//             if (line.empty())
-//                 inHeader = false;
-//             else
-//                 parseHeaderLine(line);
-//         }
-//         else {
-//             body += line;
-//         }
-//     }
-//     if (_method == "POST") {
-//         parsePostRequest(body);
-//     }
-// }
