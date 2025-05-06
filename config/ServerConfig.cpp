@@ -16,7 +16,7 @@ bool    ServerConfig::isLocationBlockStart(std::vector<std::string> tokens)
 
 bool    ServerConfig::isBlockEnd(const std::string& line)
 {
-    std::string trimmedLine = removeEndSpaces(line);
+    std::string trimmedLine = removeCommentsAndEndSpaces(line);
     return (trimmedLine == "}");
 }
 
@@ -67,7 +67,7 @@ bool    ServerConfig::extractLocationBlockContent(LocationBlock& location, std::
 
     while (std::getline(file, line))
     {
-        line = removeEndSpaces(line);
+        line = removeCommentsAndEndSpaces(line);
         if (line.empty() || line[0] == '#')
         if (isBlockEnd(line))
             return true;
@@ -100,7 +100,7 @@ bool    ServerConfig::extractServerBlockContent(ServerBlock& server, std::ifstre
     
     while (std::getline(file, line))
     {
-        line = removeEndSpaces(line);
+        line = removeCommentsAndEndSpaces(line);
         if (line.empty() || line[0] == '#')
             continue;
         if (isBlockEnd(line))
@@ -141,10 +141,9 @@ bool    ServerConfig::extractServerBlocks(std::ifstream& file)
 {
     std::string line;
     ServerBlock currentServer;
-    bool    inServerBlock = false;
 
     while (std::getline(file, line)){
-        line = removeEndSpaces(line);
+        line = removeCommentsAndEndSpaces(line);
         if (line.empty() || line[0] == '#')
             continue ;
         std::vector<std::string>    tokens = splitLine(line, " \t");
@@ -154,7 +153,6 @@ bool    ServerConfig::extractServerBlocks(std::ifstream& file)
         }
         else
         {
-            inServerBlock = true;
             currentServer = ServerBlock();
             if (!extractServerBlockContent(currentServer, file))
                 return false;
@@ -185,6 +183,8 @@ bool    ServerConfig::checkServerBlock(const ServerBlock& server)
     // bool    hasErrorPages = false;
     // bool    hasServerName = false; // pas obligatoire
     // TO DO
+
+
 
     for (size_t i = 0; i < server.locations.size(); ++i){
         if (!checkLocationBlock(server.locations[i]))

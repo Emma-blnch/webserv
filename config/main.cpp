@@ -25,14 +25,16 @@ void    splitTester(std::string line) {
         std::cout << *i << std::endl;
 }
 
-int main(int ac, char **argv) {
+int main() {
     ServerConfig config;
 
-    if (ac != 2)
-        return 0;
-    std::string conf = argv[1];
-    if (!config.parseConfigFile(conf))
-        return 0;
+    // if (ac != 2)
+    //     return 0;
+    // std::string conf = argv[1];
+    // if (!config.parseConfigFile(conf))
+    //     return 0;
+    std::string test = "     listen 8080;       #jeij f enfien fn enrfner jfio   \n";
+    std::cout << removeCommentsAndEndSpaces(test) << std::endl;
     // config.displayConfig();
     // splitTester("         bonjour TOUT D   le778 monde  \n");
 

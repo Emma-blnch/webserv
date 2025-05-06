@@ -5,7 +5,7 @@
 #include <iostream>
 #include <vector>
 
-std::string                 removeEndSpaces(const std::string& line);
+std::string                 removeCommentsAndEndSpaces(const std::string& line);
 std::vector<std::string>    splitLine(std::string line, std::string delim);
 
 #endif

@@ -1,21 +1,41 @@
 #include "ParsingUtils.hpp"
 
-std::string removeEndSpaces(const std::string& line){
+std::string removeCommentsAndEndSpaces(const std::string& line)
+{
+    //  on enlève le commentaire de la ligne s'il y a un #
+    std::string result = line;
+    size_t  commentPos = result.find('#');
+    if (commentPos == std::string::npos)
+        return line; //pas de commentaire
+    result.erase(commentPos, line.length());
+
+    // Trim les espaces et tabulations pour retourner la chaine propre
     size_t  start = 0;
-    while (start < line.length() && std::isspace(line[start]))
+    while (start < result.length() && std::isspace(result[start]))
         start++;
-    if (start == line.length())
+    if (start == result.length())
         return "";
-    size_t  end = line.length() - 1;
+    size_t  end = result.length() - 1;
     while (std::isspace(line[end]))
         end--;
-    return line.substr(start, end - start + 1);
+    return result.substr(start, end - start + 1);
 }
 
-std::vector<std::string>    splitLine(std::string line, std::string delim){
+std::string removeComments(const std::string& line)
+{
+    std::string result = line;
+    size_t  commentPos = result.find('#');
+    if (commentPos == std::string::npos)
+        return line; //pas de commentaire
+    result.erase(commentPos, line.length());
+    return result;
+}
+
+std::vector<std::string>    splitLine(std::string line, std::string delim)
+{
     std::vector<std::string>    result;
 
-    line = removeEndSpaces(line);
+    line = removeCommentsAndEndSpaces(line);
     size_t  i = 0;
     std::string token;
 
