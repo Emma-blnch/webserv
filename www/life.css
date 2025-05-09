@@ -1,0 +1,43 @@
+/* Importation des polices */
+@font-face {
+    font-family: "matter";
+    src: url(fonts/Matter-Regular.ttf);
+    font-display: swap;
+}
+
+/* Reglages globaux */
+body {
+    font-family: "matter", sans-serif;
+    font-size: 1.8rem;
+    margin: 0;
+    padding: 0;
+    background: #EAEAEA;
+    color: #272727;
+    background-image: url(img/otis-redding.png);
+    background-size: 60px;
+    background-blend-mode: multiply;
+}
+
+html {
+    transition: none;
+}
+
+/* Reste */
+.main h1 {
+    font-size: 3rem;
+    display: flex;
+    justify-content: center;
+    padding-bottom: 50px;
+    color: rgb(51, 186, 235);
+}
+
+.canards {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+.canards h2 {
+    padding: 15px;
+}

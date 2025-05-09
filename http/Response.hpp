@@ -13,6 +13,7 @@ class Response {
         std::string _stateMsg; // "OK", "Not found"...
         std::string _body; // contenu de la réponse
         std::map<std::string, std::string> _headers; // à minima "content-length" et "content-type"
+        std::map<int, std::string> _errorPages; // ex: 404 → "./www/errors/404.html"
 
         void handleGET(const Request& req);
         void handlePOST(const Request& req);
@@ -28,9 +29,12 @@ class Response {
         void setStatus(int code);
         void setHeader(const std::string& key, const std::string& value);
         void setBody(const std::string& body);
+        void setErrorPages(const std::map<int, std::string>& pages);
 
         void buildFromRequest(const Request& req);
         std::string returnResponse() const;
+
+        void loadErrorPageIfNeeded();
 };
 
 // const std::map<int, std::string> validStatus = {

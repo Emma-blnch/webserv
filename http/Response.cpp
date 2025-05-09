@@ -2,6 +2,29 @@
 #include "Request.hpp"
 #include "utils.hpp"
 
+// pour load nos pages d'erreurs html perso
+void Response::loadErrorPageIfNeeded() {
+    if (_status == 204 || _status == 304)
+        return;
+
+    std::map<int, std::string>::const_iterator it = _errorPages.find(_status);
+    if (it != _errorPages.end()) {
+        std::string root = "../www";
+        std::ifstream file(root + it->second.c_str());
+        if (file) {
+            std::cout << "page loaded : " << root + it->second << std::endl;
+            std::ostringstream content;
+            content << file.rdbuf();
+            file.close();
+            setBody(content.str());
+            setHeader("Content-Type", "text/html");
+        } else {
+            // fallback si le fichier HTML d'erreur n'existe pas
+            setBody(getValidStatus().at(_status));
+        }
+    }
+}
+
 // setters
 void Response::setStatus(int code) {
     std::map<int, std::string>::const_iterator it = getValidStatus().find(code);
@@ -12,6 +35,8 @@ void Response::setStatus(int code) {
     }
     _status = code;
     _stateMsg = it->second;
+
+    loadErrorPageIfNeeded();
 }
 
 void Response::setHeader(const std::string& key, const std::string& value) {
@@ -35,6 +60,10 @@ void Response::setBody(const std::string& body) {
     _headers["content-length"] = oss.str();
     if (_headers.find("content-type") == _headers.end())
         _headers["content-type"] = "text/plain"; // si pas de Content-Type défini, on met text/plain par défaut
+}
+
+void Response::setErrorPages(const std::map<int, std::string>& pages) {
+    _errorPages = pages;
 }
 
 // build response for each method :
@@ -61,20 +90,20 @@ void Response::handleGET(const Request& req) {
     // Vérifier que le fichier existe
     if (access(path.c_str(), F_OK) != 0) {
         setStatus(404);
-        setBody("404 Not Found");
+        // setBody("404 Not Found");
         return;
     }
     // Vérifier que je peux le lire
     if (access(path.c_str(), R_OK) != 0) {
         setStatus(403);
-        setBody("403 Forbidden");
+        // setBody("403 Forbidden");
         return;
     }
     // Vérifier que j'arrive à bien lire tout le fichier
     std::ifstream file(path.c_str());
     if (!file) {
         setStatus(500);
-        setBody("500 Internal Server Error");
+        // setBody("500 Internal Server Error");
         return;
     }
     // Sinon, lire tout le contenu pour le mettre dans le body
@@ -134,20 +163,20 @@ void Response::handleDELETE(const Request& req) { // Supprimer la ressource
     // Vérifier que le fichier existe
     if (access(path.c_str(), F_OK) != 0) {
         setStatus(404);
-        setBody("404 Not Found");
+        // setBody("404 Not Found");
         return;
     }
     // Vérifier que je peux modifier le dossier
     if (access(dir.c_str(), W_OK) != 0) {
         setStatus(403);
-        setBody("403 Forbidden");
+        // setBody("403 Forbidden");
         return;
     }
 
     // Essayer de supprimer
     if (remove(path.c_str()) != 0) {
         setStatus(500);
-        setBody("500 Internal Server Error");
+        // setBody("500 Internal Server Error");
         return;
     }
 

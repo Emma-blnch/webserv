@@ -118,6 +118,13 @@ int main() {
         req.parseRawRequest(buffer);
 
         Response res;
+       
+        std::map<int, std::string> errorPages;
+        errorPages[404] = "/errors/404.html";
+        errorPages[403] = "/errors/403.html";
+        errorPages[500] = "/errors/500.html";
+        res.setErrorPages(errorPages);
+
         res.buildFromRequest(req);
         std::string responseStr = res.returnResponse();
 

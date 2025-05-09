@@ -1,0 +1,165 @@
+/* Importation des polices */
+@font-face {
+    font-family: "matter";
+    src: url(fonts/Matter-Regular.ttf);
+    font-display: swap;
+}
+
+/* Reglages globaux */
+body {
+    font-family: "matter", sans-serif;
+    font-size: 1.8rem;
+    margin: 0;
+    padding: 0;
+    background: #EAEAEA;
+    color: #333;
+    background-image: url(img/otis-redding.png);
+    background-size: 60px;
+    background-blend-mode: multiply;
+}
+
+html {
+    transition: none;
+}
+
+/* Body */
+h1 {
+    display: flex;
+    justify-content: center;
+    font-size: 3rem;
+    padding: 10px;
+}
+
+#get {
+    display: flex;
+    flex-direction: column;
+    margin: 20px;
+    align-items: center;
+}
+
+#get p {
+    margin-top: 0;
+}
+
+#get a {
+    text-decoration: none;
+    color: #ffa600;
+    border: solid #333;
+    border-radius: 30px;
+    padding: 10px 50px;
+    background: #333;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+#get a:hover {
+    background-color: whitesmoke;
+    /* border: solid rgb(38, 143, 255); */
+}
+
+.bottom {
+    display: flex;
+    margin: 20px;
+    justify-content: center;
+}
+
+.bottom #post, #delete {
+    padding: 0 130px;
+    margin: 0 20px;
+    align-items: center;
+}
+
+#post {
+    display: flex;
+    flex-direction: column;
+}
+
+#post form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: "matter", sans-serif;
+}
+
+#post form button {
+    margin-top: 15px;
+    text-decoration: none;
+    color: #00d9ff;
+    border: solid #333;
+    border-radius: 20px;
+    padding: 10px 50px;
+    background: #333;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+#post form button:hover {
+    background-color: whitesmoke;
+}
+
+#delete {
+    display: flex;
+    flex-direction: column;
+}
+
+#delete p {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    font-size: 1rem;
+}
+
+#delete button {
+    color: #00d9ff;
+    border: solid #333;
+    margin-top: 15px;
+    border-radius: 20px;
+    padding: 10px 50px;
+    background: #333;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+#delete button:hover {
+    background-color: whitesmoke;
+}
+
+#errors {
+    display: flex;
+    flex-direction: column;
+    margin: 20px;
+    align-items: center;
+}
+
+#errors h2 {
+    margin-top: 50px;
+    margin-bottom: 0;
+}
+
+#errors ul {
+    list-style-type: none;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#errors li {
+    margin: 10px;
+    padding: 10px;
+}
+
+#errors li a {
+    text-decoration: none;
+    color: #ffa600;
+    border: solid #333;
+    background-color: #333;
+    border-radius: 30px;
+    padding: 10px 45px;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+#errors li a:hover {
+    background-color: whitesmoke;
+}
