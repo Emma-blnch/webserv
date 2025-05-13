@@ -1,5 +1,5 @@
-#ifndef SERVERCONFIG_HPP
- #define SERVERCONFIG_HPP
+#ifndef CONFIGFILE_HPP
+ #define CONFIGFILE_HPP
 
 #include <string>
 #include <vector>
@@ -7,28 +7,13 @@
 #include <fstream>
 #include <iostream>
 #include "ParsingUtils.hpp"
+#include "ServerBlock.hpp"
+#include "Directive.hpp"
 
 
-struct Directive{
-    std::string key;
-    std::string value;
-    
-};
-
-struct LocationBlock{
-    std::string path;
-    std::vector<Directive> directives;
-};
-
-struct ServerBlock{
-    std::vector<Directive> directives;
-    std::vector<LocationBlock> locations;
-};
-
-
-class ServerConfig {
+class ConfigFile {
     public:
-        ServerConfig(){};
+        ConfigFile(){};
 
         bool    parseConfigFile(const std::string& filename);
         bool    extractServerBlocks(std::ifstream& file);
@@ -45,18 +30,16 @@ class ServerConfig {
         bool    isServerBlockStart(std::vector<std::string> tokens);
         bool    isBlockEnd(const std::string& line);
 
-        bool    checkServerBlock(const ServerBlock& server);
-        bool    checkLocationBlock(const LocationBlock& location);
-        bool    checkServers();
 
-        bool    isValidPort(const Directive& directive);
-        bool    isValidClientBodySize(const Directive& directive);
+
+        bool    checkServers();
 
         
         void    displayConfig() const;
-        
-    private:
+    
+    // private:
         std::vector<ServerBlock> _servers;
+        std::string _file;
 };
 
 #endif

@@ -1,12 +1,13 @@
-#include "ServerConfig.hpp"
+#include "ConfigFile.hpp"
+#include "ServerBlock.hpp"
 
-bool    ServerConfig::isServerBlockStart(std::vector<std::string> tokens)
+bool    ConfigFile::isServerBlockStart(std::vector<std::string> tokens)
 {
     return ((tokens.size() == 2 && tokens[0] == "server" && tokens[1] == "{")
     || (tokens.size() == 1 && tokens[0] == "server{"));
 }
 
-bool    ServerConfig::isLocationBlockStart(std::vector<std::string> tokens)
+bool    ConfigFile::isLocationBlockStart(std::vector<std::string> tokens)
 {
     if (tokens.size() == 3 && tokens[0] == "location" && tokens[2] == "{"){
         return true;
@@ -14,19 +15,19 @@ bool    ServerConfig::isLocationBlockStart(std::vector<std::string> tokens)
     return false;
 }
 
-bool    ServerConfig::isBlockEnd(const std::string& line)
+bool    ConfigFile::isBlockEnd(const std::string& line)
 {
     std::string trimmedLine = removeCommentsAndEndSpaces(line);
     return (trimmedLine == "}");
 }
 
 
-bool    ServerConfig::isDirective(const std::string& line)
+bool    ConfigFile::isDirective(const std::string& line)
 {
     return line.find(';') != std::string::npos;
 }
 
-std::pair<std::string, std::string> ServerConfig::parseDirective(const std::string& line)
+std::pair<std::string, std::string> ConfigFile::parseDirective(const std::string& line)
 {
     std::pair<std::string, std::string> result;
 
@@ -47,7 +48,7 @@ std::pair<std::string, std::string> ServerConfig::parseDirective(const std::stri
     return result;
 }
 
-bool    ServerConfig::extractDirective(std::string& line, Directive& dir)
+bool    ConfigFile::extractDirective(std::string& line, Directive& dir)
 {
     std::pair<std::string, std::string> directive = parseDirective(line);
     if (directive.first.empty())
@@ -61,7 +62,7 @@ bool    ServerConfig::extractDirective(std::string& line, Directive& dir)
 }
 
 
-bool    ServerConfig::extractLocationBlockContent(LocationBlock& location, std::ifstream& file)
+bool    ConfigFile::extractLocationBlockContent(LocationBlock& location, std::ifstream& file)
 {
     std::string line;
 
@@ -69,6 +70,7 @@ bool    ServerConfig::extractLocationBlockContent(LocationBlock& location, std::
     {
         line = removeCommentsAndEndSpaces(line);
         if (line.empty() || line[0] == '#')
+            continue;
         if (isBlockEnd(line))
             return true;
         std::vector<std::string>    tokens = splitLine(line, " \t");
@@ -94,7 +96,7 @@ bool    ServerConfig::extractLocationBlockContent(LocationBlock& location, std::
 }
 
 
-bool    ServerConfig::extractServerBlockContent(ServerBlock& server, std::ifstream& file)
+bool    ConfigFile::extractServerBlockContent(ServerBlock& server, std::ifstream& file)
 {
     std::string line;
     
@@ -137,7 +139,7 @@ bool    ServerConfig::extractServerBlockContent(ServerBlock& server, std::ifstre
 }
 
 
-bool    ServerConfig::extractServerBlocks(std::ifstream& file)
+bool    ConfigFile::extractServerBlocks(std::ifstream& file)
 {
     std::string line;
     ServerBlock currentServer;
@@ -168,16 +170,25 @@ bool    ServerConfig::extractServerBlocks(std::ifstream& file)
     return true;
 }
 
+bool    ConfigFile::checkServers()
+{
+    for (size_t i = 0; i < _servers.size(); ++i){
+        ServerBlock s; // sert juste à appeler la méthode
+        if (!s.checkServerBlock(_servers[i]))
+            return false;
+    }
+    return true;
+}
 
-bool    ServerConfig::parseConfigFile(const std::string& filename)
+
+bool    ConfigFile::parseConfigFile(const std::string& filename)
 {
     std::ifstream file(filename.c_str());
-
     if (!file.is_open()){
         std::cout << "Could not open "<< filename << "\n";
         return false;
     }
-
+    _file = filename;
     if (!extractServerBlocks(file)){
         file.close();
         return false;

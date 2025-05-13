@@ -3,10 +3,9 @@ CC = c++
 CPPFLAGS = -Wall -Wextra -Werror -std=c++98
 
 SRC = main.cpp \
-	ServerConfig.cpp \
+	ConfigFile.cpp \
 	ParsingUtils.cpp \
-	checkServerBlock.cpp \
-	checkLocationBlock.cpp
+	ServerBlock.cpp
 
 OBJ = ${SRC:%.cpp=obj/%.o}
 

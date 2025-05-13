@@ -1,8 +1,8 @@
-#include "ServerConfig.hpp"
+#include "ConfigFile.hpp"
 #include <iostream>
 
 
-void    ServerConfig::displayConfig() const {
+void    ConfigFile::displayConfig() const {
     for (size_t i = 0; i < _servers.size(); ++i){
         std::cout << "Server n°" << i << ":\n\n";
         for (size_t j = 0; j < _servers[i].directives.size(); ++j){
@@ -27,7 +27,7 @@ void    splitTester(std::string line) {
 }
 
 int main(int ac, char **argv) {
-    ServerConfig config;
+    ConfigFile config;
 
     if (ac != 2)
         return 0;
