@@ -5,6 +5,13 @@
 #include <map>
 #include <fstream>
 #include <unistd.h>
+
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <cstdlib>
+#include <cstring>
+
 class Request;
 
 class Response {
@@ -35,6 +42,8 @@ class Response {
         std::string returnResponse() const;
 
         void loadErrorPageIfNeeded();
+
+        void handleCGI(const Request& req);
 };
 
 // const std::map<int, std::string> validStatus = {

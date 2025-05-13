@@ -183,9 +183,84 @@ void Response::handleDELETE(const Request& req) { // Supprimer la ressource
     // Si suppression réussie → 204 No Content (aucun body)
     setStatus(204);
 }
-    
+
+// handle CGI
+void Response::handleCGI(const Request& req) {
+    std::string scriptPath = ".." + req.getPath();
+
+    // vérifier que le script existe et est exécutable
+    if (access(scriptPath.c_str(), F_OK) != 0) {
+        setStatus(404);
+        return;
+    }
+    if (access(scriptPath.c_str(), X_OK) != 0) {
+        setStatus(403);
+        return;
+    }
+
+    // créer un pipe pour récupérer la sortie du script
+    int pipefd[2];
+    if (pipe(pipefd) == -1) {
+        setStatus(500);
+        return;
+    }
+
+    pid_t pid = fork();
+    if (pid < 0) {
+        setStatus(500);
+        return;
+    }
+    else if (pid == 0) { // CHILD
+        // redirige STDOUT vers pipe
+        dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[0]); // ferme lecture
+        close(pipefd[1]);
+
+        // prépare args pour execve
+        char* const argv[] = {
+            (char*)"/usr/bin/python3",          // interpréteur
+            (char*)scriptPath.c_str(),          // script à exécuter
+            NULL
+        };
+
+        // prépare variables d'environnement minimales
+        char* const envp[] = {
+            (char*)"GATEWAY_INTERFACE=CGI/1.1",
+            (char*)"SERVER_PROTOCOL=HTTP/1.1",
+            (char*)"REQUEST_METHOD=GET",
+            NULL
+        };
+        execve("/usr/bin/python3", argv, envp);
+        // si exec échoue
+        exit(1);
+    }
+    else { // PARENT
+        close(pipefd[1]); // lit la sortie du script
+        char buffer[1024];
+        std::string output;
+
+        ssize_t bytesRead;
+        while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer) - 1)) > 0) {
+            buffer[bytesRead] = '\0';
+            output += buffer;
+        }
+        close(pipefd[0]);
+        waitpid(pid, NULL, 0); // attend fin du processus enfant
+
+        // préparer la réponse
+        setStatus(200);
+        setBody(output);
+        setHeader("Content-Type", "text/plain");
+    }
+}
+
 void Response::buildFromRequest(const Request& req) {
-    if (req.getMethod() == "GET")
+    std::string path = req.getPath();
+
+    if (path.find("/cgi-bin/") == 0) {
+        handleCGI(req);
+    }
+    else if (req.getMethod() == "GET")
         handleGET(req);
     else if (req.getMethod() == "POST")
         handlePOST(req);
