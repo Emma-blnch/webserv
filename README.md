@@ -14,3 +14,53 @@
 - lors du buildFromRequest(), en plus de la config server, chercher la location la plus spécifique qui matche le path de la requête et appliquer les directives de cette location en priorité sur celles du server
 - class Response (http) a modifier : class buildFromRequest doit maintenant recevoir une référence vers le bloc serveur (ServerBlock) correspondant, remplacer chemin du root du server (std::string path = "." + req.getPath(); into std::string path = serverRoot + req.getPath();
 où 'serverRoot' est extrait des directives du bloc serveur.), dans handlePOST ajouter une vérification de la taille du corps (max_body_size), gerer les errorPages selon fichier de config
+
+---
+
+## ex de class ServerInstance :
+```
+#ifndef SERVERINSTANCE_HPP
+#define SERVERINSTANCE_HPP
+
+#include <string>
+#include <vector>
+#include <map>
+
+struct Location {
+    std::string path; // "/upload", "/images"...
+    std::string root; // racine spécifique à cette location
+    std::string index; // ex: "index.html"
+    bool autoindex;
+    std::vector<std::string> allowedMethods; // GET, POST, DELETE
+    std::string cgiPath; // chemin vers script exécutable ou interpréteur
+    std::string uploadDir; // destination des fichiers uploadés
+
+    Location() : autoindex(false) {}
+};
+
+class ServerInstance {
+private:
+    std::string _host;              // "127.0.0.1"
+    int _port;                      // 8080
+    std::string _serverName;        // "localhost", "mydomain.com"
+    std::string _root;              // "./www"
+    std::string _index;             // "index.html"
+    size_t _clientMaxBodySize;      // en octets
+    std::map<int, std::string> _errorPages; // 404 → "/errors/404.html"
+
+    std::vector<Location> _locations;
+
+public:
+    // Constructors
+    ServerInstance() : _port(80), _clientMaxBodySize(1000000) {}
+
+    // Getters
+    const std::string& getHost() const { return _host; }
+    int getPort() const { return _port; }
+    const std::string& getServerName() const { return _serverName; }
+    const std::string& getRoot() const { return _root; }
+    const std::string& getIndex() const { return _index; }
+    size_t getClientMaxBodySize() const { return _clientMaxBodySize; }
+    const std::map<int, std::string>& getErrorPages() const { return _errorPages; }
+    const std::vector
+```
