@@ -1,7 +1,6 @@
 # Mes ajouts faits
 - ajout de pages html custom (page d'accueil + pages d'erreurs)
 - ajout d'un dossier cgi-bin contenant un script python executer par les cgi
-- ajout d'une classe ServerInstance qui contient toutes les infos du serveur pour ensuite ouvrir socket etc
 - parsing fichiers config finit (ajout des directives du bloc locaiton stockees en attribut, pages d'erreur stockees)
 
 ---  
