@@ -55,3 +55,28 @@ std::vector<std::string>    splitLine(std::string line, std::string delim)
     }
     return (result);
 }
+
+std::set<std::string>    splitLineSet(std::string line, std::string delim)
+{
+    std::set<std::string>    result;
+
+    line = removeCommentsAndEndSpaces(line);
+    size_t  i = 0;
+    std::string token;
+
+    while (i < line.length()){
+        if (delim.find(line[i]) != std::string::npos){
+            if (!token.empty()){
+                result.insert(token);
+                token = "";
+            }
+        }
+        else
+            token += line[i];
+        i++;
+    }
+    if (!token.empty()){
+        result.insert(token);
+    }
+    return (result);
+}

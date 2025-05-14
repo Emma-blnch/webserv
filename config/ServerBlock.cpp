@@ -2,7 +2,6 @@
 #include "ConfigUtils.hpp"
 
 static bool hasListen = false;
-static bool hasHost = false;
 static bool hasClientMaxBodySize = false;
 static bool hasServerName = false;
 static bool hasRoot = false;
@@ -126,7 +125,7 @@ bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
             }
             std::vector<std::string>    methods  = splitLine(currentDir.value, " \t");
             for (size_t j = 0; j < methods.size(); ++j){
-                if (methods[j] != "GET" && methods[j] != "POST"){
+                if (methods[j] != "GET" && methods[j] != "POST" && methods[j] != "DELETE"){
                     std::cout << "Config error: method not allowed: " << methods[j] << std::endl;
                     return false;
                 }
@@ -202,12 +201,6 @@ bool    ServerBlock::isDoubleDirective(const Directive& directive)
         }
         hasListen = true;
     }
-    else if (directive.key == "host") {
-        if (hasHost) {
-            return true;
-        }
-        hasHost = true;
-    }
     else if (directive.key == "client_max_body_size") {
         if (hasClientMaxBodySize) {
             return true;
@@ -238,7 +231,6 @@ bool    ServerBlock::isDoubleDirective(const Directive& directive)
 void    ServerBlock::unsetDoubleDirective()
 {
     hasListen = false;
-    hasHost = false;
     hasClientMaxBodySize = false;
     hasServerName = false;
     hasRoot = false;
@@ -260,11 +252,6 @@ bool    ServerBlock::checkServerBlock(const ServerBlock& server)
             if (!isValidPort(currentDir))
                 return false;
             _port = std::stoi(currentDir.value);
-        }
-        else if (currentDir.key == "host"){
-            if (!isValidHost(currentDir))
-                return false;
-            _host = currentDir.value;
         }
         else if (currentDir.key == "client_max_body_size") 
         {
@@ -288,6 +275,7 @@ bool    ServerBlock::checkServerBlock(const ServerBlock& server)
                 std::cout << "token server_name sans name\n";
                 return false;
             }
+            // std::set<std::string>    names = splitLineSet(currentDir.value, " \t");
             _serverName = currentDir.value;
         }
         else if (currentDir.key == "error_page")
@@ -298,10 +286,10 @@ bool    ServerBlock::checkServerBlock(const ServerBlock& server)
                 return false;
             }
             // stocker error pages dans _errorPages
-            std::vector<std::string> error_part = splitLine(currentDir.value, " \t");
-            if (error_part.size() >= 2) {
-                int code = std::atoi(error_part[0].c_str());
-                std::string path = error_part[1];
+            std::vector<std::string> errorPart = splitLine(currentDir.value, " \t");
+            if (errorPart.size() >= 2) {
+                int code = std::atoi(errorPart[0].c_str());
+                std::string path = errorPart[1];
                 if (access(path.c_str(), F_OK) != 0) {
                     std::cout << "Erreur config: page d'erreur " << path << " introuvable\n";
                     return false;
