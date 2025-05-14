@@ -62,5 +62,25 @@ public:
     const std::string& getIndex() const { return _index; }
     size_t getClientMaxBodySize() const { return _clientMaxBodySize; }
     const std::map<int, std::string>& getErrorPages() const { return _errorPages; }
-    const std::vector
+    const std::vector<Location>& getLocations() const { return _locations; }
+
+    // Setters
+    void setHost(const std::string& host) { _host = host; }
+    void setPort(int port) { _port = port; }
+    void setServerName(const std::string& name) { _serverName = name; }
+    void setRoot(const std::string& root) { _root = root; }
+    void setIndex(const std::string& index) { _index = index; }
+    void setClientMaxBodySize(size_t size) { _clientMaxBodySize = size; }
+    void addErrorPage(int code, const std::string& path) { _errorPages[code] = path; }
+    void addLocation(const Location& loc) { _locations.push_back(loc); }
+
+    // Trouver la location correspondant à un path donné
+    const Location* findMatchingLocation(const std::string& requestPath) const {
+        for (size_t i = 0; i < _locations.size(); ++i) {
+            if (requestPath.find(_locations[i].path) == 0)
+                return &_locations[i];
+        }
+        return NULL;
+    }
+};
 ```
