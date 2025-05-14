@@ -175,6 +175,13 @@ void Response::handlePOST(const Request& req, const LocationBlock* location) { /
         return;
     }
 
+    // Vérifier que le body ne dépasse pas client_max_body_size
+    if (location && location->maxBodySize > 0 && body.size() > location->maxBodySize) {
+        setStatus(413);
+        setBody("413 Payload Too Large");
+        return;
+    }
+
     // Traiter le contenu
     setBody("POST received: " + body);
 

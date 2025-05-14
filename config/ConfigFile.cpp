@@ -1,5 +1,6 @@
 #include "ConfigFile.hpp"
 #include "ServerBlock.hpp"
+#include <fcntl.h>
 
 bool    ConfigFile::isServerBlockStart(std::vector<std::string> tokens)
 {
@@ -116,6 +117,12 @@ bool    ConfigFile::extractServerBlockContent(ServerBlock& server, std::ifstream
             LocationBlock   location;
             std::string path = tokens[1];
             location.path = path;
+            int fd = open(path.c_str(), O_DIRECTORY);
+            if (fd < 0) {
+                std::cout << "Erreur: ce n'est pas un dossier\n";
+                return false;
+            }
+            close(fd);
             if (!extractLocationBlockContent(location, file))
                 return false;
             // server._locations.push_back(location);
