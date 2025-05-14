@@ -1,5 +1,6 @@
 #include "ServerBlock.hpp"
 #include "ConfigUtils.hpp"
+#include <fcntl.h>
 
 static bool hasListen = false;
 static bool hasClientMaxBodySize = false;
@@ -252,6 +253,35 @@ bool    ServerBlock::checkServerBlock(const ServerBlock& server)
             if (!isValidPort(currentDir))
                 return false;
             _port = std::stoi(currentDir.value);
+        }
+        else if (currentDir.key == "root"){
+            if (currentDir.value.empty())
+            {
+                std::cout << "Config errror: no root\n";
+                return false;
+            }
+            std::string path = server.getRoot();
+            int fd = open(path.c_str(), O_DIRECTORY);
+            if (fd < 0) {
+                std::cout << "Erreur: ce n'est pas un dossier\n";
+                return false;
+            }
+            close(fd);
+            if (path.c_str() != "www") {
+                std::cout << "Erreur: mauvais dossier root\n";
+                return false;
+            }
+        }
+        else if (currentDir.key == "index"){
+            if (currentDir.value.empty()){
+                std::cout << "Config error: no index\n";
+                return false;
+            }
+            std::string path2 = server.getIndex();
+            if (access(path2.c_str(), F_OK) != 0) {
+                std::cout << "Erreur: cannot access index " << server.getIndex() << std::endl;
+                return false;
+            }
         }
         else if (currentDir.key == "client_max_body_size") 
         {
