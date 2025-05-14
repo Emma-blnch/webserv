@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <cstring>
 
+class ServerInstance;
 class Request;
 
 class Response {
@@ -22,9 +23,9 @@ class Response {
         std::map<std::string, std::string> _headers; // à minima "content-length" et "content-type"
         std::map<int, std::string> _errorPages; // ex: 404 → "./www/errors/404.html"
 
-        void handleGET(const Request& req);
-        void handlePOST(const Request& req);
-        void handleDELETE(const Request& req);
+        void handleGET(const Request& req, const ServerInstance& server, const LocationBlock* location);
+        void handlePOST(const Request& req, const ServerInstance& server, const LocationBlock* location);
+        void handleDELETE(const Request& req, const ServerInstance& server, const LocationBlock* location);
 
         std::string getExtension(const std::string& path);
         std::string guessContentType(const std::string& ext);
@@ -38,42 +39,13 @@ class Response {
         void setBody(const std::string& body);
         void setErrorPages(const std::map<int, std::string>& pages);
 
-        void buildFromRequest(const Request& req);
+        void buildFromRequest(const Request& req, const ServerInstance& server);
+        // void buildFromRequest(const Request& req);
         std::string returnResponse() const;
 
         void loadErrorPageIfNeeded();
 
-        void handleCGI(const Request& req);
+        void handleCGI(const Request& req, const ServerInstance& server, const LocationBlock* location);
 };
-
-// const std::map<int, std::string> validStatus = {
-//     {200, "OK"},
-//     {201, "Created"},
-//     {204, "No Content"},
-//     {400, "Bad Request"},
-//     {403, "Forbidden"},
-//     {404, "Not Found"},
-//     {405, "Method Not Allowed"},
-//     {413, "Payload Too Large"},
-//     {414, "URI Too Long"},
-//     {500, "Internal Server Error"},
-//     {501, "Not Implemented"},
-//     {505, "HTTP Version Not Supported"}
-// };
-
-// const std::map<std::string, std::string> validMimeTypes = {
-//     {".html", "text/html"},
-//     {".htm", "text/html"},
-//     {".css", "text/css"},
-//     {".js", "application/javascript"},
-//     {".json", "application/json"},
-//     {".txt", "text/plain"},
-//     {".png", "image/png"},
-//     {".jpg", "image/jpeg"},
-//     {".jpeg", "image/jpeg"},
-//     {".gif", "image/gif"},
-//     {".pdf", "application/pdf"},
-//     {".ico", "image/x-icon"},
-// };
 
 #endif

@@ -148,3 +148,8 @@ int main() {
 // dans un autre terminal :
 // curl -i http://localhost:8080/index.html
 // curl -X POST http://localhost:8080 -d "hello"
+
+// std::vector<ServerInstance> instances;
+// for (size_t i = 0; i < configFile.getServers().size(); ++i)
+//     instances.push_back(createServerInstance(configFile.getServers()[i]));
+

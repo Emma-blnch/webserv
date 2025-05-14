@@ -1,4 +1,5 @@
 #include "ServerBlock.hpp"
+#include "ConfigUtils.hpp"
 
 static bool hasListen = false;
 static bool hasHost = false;
@@ -287,6 +288,17 @@ bool    ServerBlock::checkServerBlock(const ServerBlock& server)
                 std::cout << "Erreur config: manque page(s) d'erreur\n";
                 return false;
             }
+            // stocker error pages dans _errorPages
+            std::vector<std::string> error_part = splitLine(currentDir.value, " \t");
+            if (error_part.size() >= 2) {
+                int code = std::atoi(error_part[0].c_str());
+                std::string path = error_part[1];
+                _errorPages[code] = path;
+            }
+            else {
+                std::cout << "Erreur config: mauvais format error_pages\n";
+                return false;
+            }
         }
         else
         {
@@ -295,9 +307,14 @@ bool    ServerBlock::checkServerBlock(const ServerBlock& server)
         }
     }
     for (size_t i = 0; i < server.locations.size(); ++i){
-        if (!checkLocationBlock(server.locations[i]))
+        const LocationBlock& loc = server.locations[i];
+        if (!checkLocationBlock(loc))
             return false;
-    }
+        if (!fillLocationBlock(const_cast<LocationBlock&>(loc))) {
+            std::cout << "Erreur config: remplissage du bloc location échoué\n";
+            return false;
+        }
     unsetDoubleDirective();
     return true;
+    }
 }

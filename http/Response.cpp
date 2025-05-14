@@ -1,6 +1,7 @@
 #include "Response.hpp"
 #include "Request.hpp"
 #include "utils.hpp"
+#include "ServerInstance.hpp"
 
 // pour load nos pages d'erreurs html perso
 void Response::loadErrorPageIfNeeded() {
@@ -67,6 +68,17 @@ void Response::setErrorPages(const std::map<int, std::string>& pages) {
 }
 
 // build response for each method :
+bool isMethodAllowed(const LocationBlock* location, const std::string& method) {
+    if (!location) // pas de bloc location donc aucune restriction ?
+        return true;
+        
+    for (size_t i = 0; i < location->allowedMethods.size(); ++i) {
+        if (location->allowedMethods[i] == method) {
+            return true;
+        }
+    }
+    return false;
+}
 
 // GET
 std::string Response::getExtension(const std::string& path) {
@@ -83,24 +95,38 @@ std::string Response::guessContentType(const std::string& ext) {
     return "application/octet-stream"; // type MIME par défaut pour contenu binaire inconnu
 }
 
-void Response::handleGET(const Request& req) {
+void Response::handleGET(const Request& req, const ServerInstance& server, const LocationBlock* location) {
+    // Verifier si methode est allowed selon bloc Location du server
+    if (!isMethodAllowed(location, "GET")) {
+        setStatus(405);
+        return;
+    }
+    
+    // recupere le root du location bloc et construit le chemin avec
+    std::string root = location ? location->root : server.getRoot();
+    std::string relPath = req.getPath();
+    if (location)
+        relPath = relPath.substr(location->path.length());
+
+    std::string fullPath = root + relPath;
+
     // Traduire l'URI en chemin réel
-    std::string path = "." + req.getPath();
+    // std::string path = "." + req.getPath();
 
     // Vérifier que le fichier existe
-    if (access(path.c_str(), F_OK) != 0) {
+    if (access(fullPath.c_str(), F_OK) != 0) {
         setStatus(404);
         // setBody("404 Not Found");
         return;
     }
     // Vérifier que je peux le lire
-    if (access(path.c_str(), R_OK) != 0) {
+    if (access(fullPath.c_str(), R_OK) != 0) {
         setStatus(403);
         // setBody("403 Forbidden");
         return;
     }
     // Vérifier que j'arrive à bien lire tout le fichier
-    std::ifstream file(path.c_str());
+    std::ifstream file(fullPath.c_str());
     if (!file) {
         setStatus(500);
         // setBody("500 Internal Server Error");
@@ -112,7 +138,7 @@ void Response::handleGET(const Request& req) {
     file.close();
 
     // Déterminer le type MIME (Content-Type)
-    std::string ext = getExtension(path);   // -> ".html"
+    std::string ext = getExtension(fullPath);   // -> ".html"
     std::string mime = guessContentType(ext); // -> "text/html"
 
     // Préparer la réponse
@@ -122,7 +148,13 @@ void Response::handleGET(const Request& req) {
 }
 
 // POST
-void Response::handlePOST(const Request& req) { // Envoyer des données au serveur
+void Response::handlePOST(const Request& req, const ServerInstance& server, const LocationBlock* location) { // Envoyer des données au serveur
+    // Verifier si methode est allowed selon bloc Location du server
+    if (!isMethodAllowed(location, "POST")) {
+        setStatus(405);
+        return;
+    }
+    
     // Vérifier la présence d’un body
     std::string body = req.getBody();
 
@@ -152,16 +184,31 @@ void Response::handlePOST(const Request& req) { // Envoyer des données au serve
 }
 
 // DELETE
-void Response::handleDELETE(const Request& req) { // Supprimer la ressource
+void Response::handleDELETE(const Request& req, const ServerInstance& server, const LocationBlock* location) { // Supprimer la ressource
+    // Verifier si methode est allowed selon bloc Location du server
+    if (!isMethodAllowed(location, "DELETE")) {
+        setStatus(405);
+        return;
+    }
+    
+    // recupere le root du location bloc et construit le chemin avec
+    std::string root = location ? location->root : server.getRoot();
+    std::string relPath = req.getPath();
+    if (location)
+        relPath = relPath.substr(location->path.length());
+
+    std::string fullPath = root + relPath;
+    std::string dir = fullPath.substr(0, fullPath.find_last_of('/'));
+
     // Traduire l’URI en chemin réel
-    std::string path = "." + req.getPath();
-    // Extraire le dossier
-    std::string dir = path.substr(0, path.find_last_of('/'));
+    // std::string path = "." + req.getPath();
+    // // Extraire le dossier
+    // std::string dir = path.substr(0, path.find_last_of('/'));
     if (dir.empty())
         dir = ".";
 
     // Vérifier que le fichier existe
-    if (access(path.c_str(), F_OK) != 0) {
+    if (access(fullPath.c_str(), F_OK) != 0) {
         setStatus(404);
         // setBody("404 Not Found");
         return;
@@ -174,7 +221,7 @@ void Response::handleDELETE(const Request& req) { // Supprimer la ressource
     }
 
     // Essayer de supprimer
-    if (remove(path.c_str()) != 0) {
+    if (remove(fullPath.c_str()) != 0) {
         setStatus(500);
         // setBody("500 Internal Server Error");
         return;
@@ -184,9 +231,31 @@ void Response::handleDELETE(const Request& req) { // Supprimer la ressource
     setStatus(204);
 }
 
-// handle CGI
-void Response::handleCGI(const Request& req) {
-    std::string scriptPath = ".." + req.getPath();
+// CGI
+void Response::handleCGI(const Request& req, const ServerInstance& server, const LocationBlock* location) {
+    // Verifier method allowed dans location block dans config file
+    if (!isMethodAllowed(location, req.getMethod())) {
+        setStatus(405);
+        return;
+    }
+
+    // recup interpreteur dans location block
+    std::string interpreter;
+    if (location && !location->cgiPath.empty()) {
+        interpreter = location->cgiPath;
+    }
+    else {
+        interpreter = "/usr/bin/python3";
+    }
+
+    // generer chemin selon location block
+    std::string scriptPath;
+    if (location && !location->root.empty()) {
+        scriptPath = location->root + req.getPath().substr(location->path.length());
+    }
+    else {
+        scriptPath = ".." + req.getPath();
+    }
 
     // vérifier que le script existe et est exécutable
     if (access(scriptPath.c_str(), F_OK) != 0) {
@@ -254,18 +323,19 @@ void Response::handleCGI(const Request& req) {
     }
 }
 
-void Response::buildFromRequest(const Request& req) {
+void Response::buildFromRequest(const Request& req, const ServerInstance& server) {
     std::string path = req.getPath();
+    const LocationBlock* location = server.findMatchingLocation(req.getPath());
 
     if (path.find("/cgi-bin/") == 0) {
-        handleCGI(req);
+        handleCGI(req, server, location);
     }
     else if (req.getMethod() == "GET")
-        handleGET(req);
+        handleGET(req, server, location);
     else if (req.getMethod() == "POST")
-        handlePOST(req);
+        handlePOST(req, server, location);
     else if (req.getMethod() == "DELETE")
-        handleDELETE(req);
+        handleDELETE(req, server, location);
     else {
         setStatus(405);
         setBody("Method Not Allowed");

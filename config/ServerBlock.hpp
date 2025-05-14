@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <fstream>
+#include <limits.h>
 #include <iostream>
 #include "ParsingUtils.hpp"
 #include "LocationBlock.hpp"
@@ -50,6 +51,4 @@ class ServerBlock
         std::string                 _index;
         std::map<int, std::string>  _errorPages;
         std::string                 _clientMaxBodySize;
-
-    
 };

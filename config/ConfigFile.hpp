@@ -36,8 +36,11 @@ class ConfigFile {
 
         
         void    displayConfig() const;
+
+        const std::vector<ServerBlock>& getServers() const { return _servers; }
+        const std::string& getFileName() const { return _file; }
     
-    // private:
+    private:
         std::vector<ServerBlock> _servers;
         std::string _file;
 };
