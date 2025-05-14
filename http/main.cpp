@@ -1,5 +1,7 @@
 #include "Request.hpp"
 #include "Response.hpp"
+#include "../config/ServerBlock.hpp"
+#include "../config/LocationBlock.hpp"
 
 // TESTS REQUEST & REPONSES :
 
@@ -116,6 +118,7 @@ int main() {
     try {
         Request req;
         req.parseRawRequest(buffer);
+        // std::cout << "buffer " << buffer;
 
         Response res;
        
@@ -124,8 +127,8 @@ int main() {
         errorPages[403] = "/errors/403.html";
         errorPages[500] = "/errors/500.html";
         res.setErrorPages(errorPages);
-
-        res.buildFromRequest(req);
+        const ServerBlock server;
+        res.buildFromRequest(req, server);
         std::string responseStr = res.returnResponse();
 
         send(clientSocket, responseStr.c_str(), responseStr.size(), 0);
@@ -148,8 +151,3 @@ int main() {
 // dans un autre terminal :
 // curl -i http://localhost:8080/index.html
 // curl -X POST http://localhost:8080 -d "hello"
-
-// std::vector<ServerInstance> instances;
-// for (size_t i = 0; i < configFile.getServers().size(); ++i)
-//     instances.push_back(createServerInstance(configFile.getServers()[i]));
-

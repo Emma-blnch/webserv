@@ -1,7 +1,7 @@
 #include "Response.hpp"
 #include "Request.hpp"
 #include "utils.hpp"
-#include "ServerInstance.hpp"
+#include "../config/ServerBlock.hpp"
 
 // pour load nos pages d'erreurs html perso
 void Response::loadErrorPageIfNeeded() {
@@ -95,7 +95,7 @@ std::string Response::guessContentType(const std::string& ext) {
     return "application/octet-stream"; // type MIME par défaut pour contenu binaire inconnu
 }
 
-void Response::handleGET(const Request& req, const ServerInstance& server, const LocationBlock* location) {
+void Response::handleGET(const Request& req, const ServerBlock& server, const LocationBlock* location) {
     // Verifier si methode est allowed selon bloc Location du server
     if (!isMethodAllowed(location, "GET")) {
         setStatus(405);
@@ -148,7 +148,7 @@ void Response::handleGET(const Request& req, const ServerInstance& server, const
 }
 
 // POST
-void Response::handlePOST(const Request& req, const ServerInstance& server, const LocationBlock* location) { // Envoyer des données au serveur
+void Response::handlePOST(const Request& req, const LocationBlock* location) { // Envoyer des données au serveur
     // Verifier si methode est allowed selon bloc Location du server
     if (!isMethodAllowed(location, "POST")) {
         setStatus(405);
@@ -184,7 +184,7 @@ void Response::handlePOST(const Request& req, const ServerInstance& server, cons
 }
 
 // DELETE
-void Response::handleDELETE(const Request& req, const ServerInstance& server, const LocationBlock* location) { // Supprimer la ressource
+void Response::handleDELETE(const Request& req, const ServerBlock& server, const LocationBlock* location) { // Supprimer la ressource
     // Verifier si methode est allowed selon bloc Location du server
     if (!isMethodAllowed(location, "DELETE")) {
         setStatus(405);
@@ -232,7 +232,7 @@ void Response::handleDELETE(const Request& req, const ServerInstance& server, co
 }
 
 // CGI
-void Response::handleCGI(const Request& req, const ServerInstance& server, const LocationBlock* location) {
+void Response::handleCGI(const Request& req, const LocationBlock* location) {
     // Verifier method allowed dans location block dans config file
     if (!isMethodAllowed(location, req.getMethod())) {
         setStatus(405);
@@ -323,17 +323,17 @@ void Response::handleCGI(const Request& req, const ServerInstance& server, const
     }
 }
 
-void Response::buildFromRequest(const Request& req, const ServerInstance& server) {
+void Response::buildFromRequest(const Request& req, const ServerBlock& server) {
     std::string path = req.getPath();
     const LocationBlock* location = server.findMatchingLocation(req.getPath());
 
     if (path.find("/cgi-bin/") == 0) {
-        handleCGI(req, server, location);
+        handleCGI(req, location);
     }
     else if (req.getMethod() == "GET")
         handleGET(req, server, location);
     else if (req.getMethod() == "POST")
-        handlePOST(req, server, location);
+        handlePOST(req, location);
     else if (req.getMethod() == "DELETE")
         handleDELETE(req, server, location);
     else {

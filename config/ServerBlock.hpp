@@ -19,17 +19,19 @@
 class ServerBlock 
 {
     public:
-        ServerBlock(): _host("0.0.0.0"), _port(80), _clientMaxBodySize("1M") {};
+        ServerBlock(): _host("0.0.0.0"), _port(80), _clientMaxBodySize(1000000) {};
         std::vector<Directive>      directives;
-        std::vector<LocationBlock>  locations;
+        std::vector<LocationBlock>  _locations;
 
+        // getters
         std::string                 getHost() const{ return _host; };
         int getPort() const { return _port; };
         const std::string& getServerName() const { return _serverName; };
         const std::string& getRoot() const { return _root; };
         const std::string& getIndex() const { return _index; };
-        const std::string& getClientMaxBodySize() const { return _clientMaxBodySize;};
+        size_t getClientMaxBodySize() const { return _clientMaxBodySize;};
         const std::map<int, std::string>& getErrorPages() const { return _errorPages; };
+        const std::vector<LocationBlock>& getLocations() const { return _locations; }
 
         bool    checkServerBlock(const ServerBlock& server);
         bool    checkLocationBlock(const LocationBlock& location);
@@ -41,6 +43,26 @@ class ServerBlock
         bool    isDoubleDirective(const Directive& directive);
         void    unsetDoubleDirective();
 
+        // Setters
+        void setHost(const std::string& host) { _host = host; }
+        void setPort(int port) { _port = port; }
+        void setServerName(const std::string& name) { _serverName = name; }
+        void setRoot(const std::string& root) { _root = root; }
+        void setIndex(const std::string& index) { _index = index; }
+        void setClientMaxBodySize(size_t size) { _clientMaxBodySize = size; }
+        void addErrorPage(int code, const std::string& path) { _errorPages[code] = path; }
+        void addLocation(const LocationBlock& loc) { _locations.push_back(loc); }
+
+
+        // trouver le bloc Location selon le chemin demander (a utiliser dans class Response)
+        const LocationBlock* findMatchingLocation(const std::string& requestPath) const {
+            for (size_t i = 0; i < _locations.size(); ++i) {
+                if (requestPath.find(_locations[i].path) == 0)
+                    return &_locations[i];
+            }
+            return NULL;
+        }
+
         // Listen&                     listen;
 
     private:
@@ -50,5 +72,5 @@ class ServerBlock
         std::string                 _serverName;
         std::string                 _index;
         std::map<int, std::string>  _errorPages;
-        std::string                 _clientMaxBodySize;
+        size_t                 _clientMaxBodySize;
 };

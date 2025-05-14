@@ -49,7 +49,7 @@ bool    ServerBlock::isValidPort(const Directive& directive)
     }
 
     // Format host::port dans listen
-    std::string value;
+    std::string value = directive.value;
     size_t      sep = value.find(':');
 
     if (sep != std::string::npos){
@@ -270,7 +270,16 @@ bool    ServerBlock::checkServerBlock(const ServerBlock& server)
         {
             if (!isValidClientBodySize(currentDir))
                 return false;
-            _clientMaxBodySize = currentDir.value;
+            // _clientMaxBodySize = currentDir.value;
+            std::string sizeStr = currentDir.value;
+            long size = std::atoi(sizeStr.c_str());
+            if (!sizeStr.empty() && isdigit(sizeStr[sizeStr.length() - 1]) == 0) {
+                char unit = tolower(sizeStr[sizeStr.length() - 1]);
+                if (unit == 'k') size *= 1024;
+                else if (unit == 'm') size *= 1024 * 1024;
+                else if (unit == 'g') size *= 1024 * 1024 * 1024;
+            }
+            _clientMaxBodySize = static_cast<size_t>(size);
         }
         else if (currentDir.key == "server_name")
         {
@@ -293,6 +302,10 @@ bool    ServerBlock::checkServerBlock(const ServerBlock& server)
             if (error_part.size() >= 2) {
                 int code = std::atoi(error_part[0].c_str());
                 std::string path = error_part[1];
+                if (access(path.c_str(), F_OK) != 0) {
+                    std::cout << "Erreur config: page d'erreur " << path << " introuvable\n";
+                    return false;
+                }
                 _errorPages[code] = path;
             }
             else {
@@ -306,15 +319,15 @@ bool    ServerBlock::checkServerBlock(const ServerBlock& server)
             return false;
         }
     }
-    for (size_t i = 0; i < server.locations.size(); ++i){
-        const LocationBlock& loc = server.locations[i];
-        if (!checkLocationBlock(loc))
+    for (size_t i = 0; i < server._locations.size(); ++i){
+        // const LocationBlock& loc = server._locations[i];
+        if (!checkLocationBlock(_locations[i]))
             return false;
-        if (!fillLocationBlock(const_cast<LocationBlock&>(loc))) {
+        if (!fillLocationBlock(_locations[i])) {
             std::cout << "Erreur config: remplissage du bloc location échoué\n";
             return false;
         }
+    }
     unsetDoubleDirective();
     return true;
-    }
 }

@@ -118,7 +118,8 @@ bool    ConfigFile::extractServerBlockContent(ServerBlock& server, std::ifstream
             location.path = path;
             if (!extractLocationBlockContent(location, file))
                 return false;
-            server.locations.push_back(location);
+            // server._locations.push_back(location);
+            server.addLocation(location);
         }
         else if (isDirective(line))
         {
@@ -137,7 +138,6 @@ bool    ConfigFile::extractServerBlockContent(ServerBlock& server, std::ifstream
     std::cout << "Bloc server ouvert\n";
     return false;
 }
-
 
 bool    ConfigFile::extractServerBlocks(std::ifstream& file)
 {

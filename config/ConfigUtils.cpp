@@ -1,43 +1,6 @@
 #include "ServerBlock.hpp"
-#include "ServerInstance.hpp"
 #include "ConfigUtils.hpp"
 #include "LocationBlock.hpp"
-
-ServerInstance createServerInstance(const ServerBlock& block) {
-    ServerInstance instance;
-
-    instance.setHost(block.getHost());
-    instance.setPort(block.getPort());
-    instance.setServerName(block.getServerName());
-    instance.setRoot(block.getRoot());
-    instance.setIndex(block.getIndex());
-
-    // Convertir clientMaxBodySize en octets
-    const std::string& sizeStr = block.getClientMaxBodySize();
-    long size = std::atoi(sizeStr.c_str());
-    if (!sizeStr.empty() && isdigit(sizeStr[sizeStr.length() - 1]) == 0) {
-        char unit = tolower(sizeStr[sizeStr.length() - 1]);
-        if (unit == 'k')
-            size *= 1024;
-        else if (unit == 'm')
-            size *= 1024 * 1024;
-        else if (unit == 'g')
-            size *= 1024 * 1024 * 1024;
-    }
-    instance.setClientMaxBodySize(static_cast<size_t>(size));
-
-    // Ajouter les pages d'erreur
-    const std::map<int, std::string>& errorPages = block.getErrorPages();
-    for (std::map<int, std::string>::const_iterator it = errorPages.begin(); it != errorPages.end(); ++it)
-        instance.addErrorPage(it->first, it->second);
-
-    // Ajouter les blocs location
-    const std::vector<LocationBlock>& locations = block.locations;
-    for (size_t i = 0; i < locations.size(); ++i)
-        instance.addLocation(locations[i]);
-
-    return instance;
-}
 
 bool fillLocationBlock(LocationBlock& loc) {
     for (size_t i = 0; i < loc.directives.size(); ++i) {

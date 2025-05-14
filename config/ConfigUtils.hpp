@@ -9,7 +9,6 @@
 class ServerInstance;
 class ServerBlock;
 
-ServerInstance createServerInstance(const ServerBlock& block);
 bool fillLocationBlock(LocationBlock& loc);
 
 #endif
