@@ -25,7 +25,7 @@ class Response {
         std::map<int, std::string> _errorPages; // ex: 404 → "./www/errors/404.html"
 
         void handleGET(const Request& req, const ServerBlock& server, const LocationBlock* location);
-        void handlePOST(const Request& req, const LocationBlock* location);
+        void handlePOST(const Request& req, const ServerBlock& server, const LocationBlock* location);
         void handleDELETE(const Request& req, const ServerBlock& server, const LocationBlock* location);
 
         std::string getExtension(const std::string& path);

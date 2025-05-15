@@ -1,6 +1,5 @@
 #include "LocationBlock.hpp"
 #include "ServerBlock.hpp"
-#include "ConfigUtils.hpp"
 
 bool fillLocationBlock(LocationBlock& loc) {
     for (size_t i = 0; i < loc.directives.size(); ++i) {

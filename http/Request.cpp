@@ -34,6 +34,13 @@ void Request::parseRequestLine(const std::string& line) {
         throw std::runtime_error("Invalid HTTP version");
     if (_version != "HTTP/1.1")
         throw std::runtime_error("Unsupported HTTP version: " + _version);
+    // Sécurité sur _path
+    if (_path.find("..") != std::string::npos || _path.find('\0') != std::string::npos) {
+        throw std::runtime_error("Unsafe request path (../ or null byte)");
+    }
+    if (_path.size() > 2048) {
+        throw std::runtime_error("Request path too long");
+    }
 }
 
 void Request::parseHeaderLine(const std::string& line) {

@@ -148,7 +148,7 @@ void Response::handleGET(const Request& req, const ServerBlock& server, const Lo
 }
 
 // POST
-void Response::handlePOST(const Request& req, const LocationBlock* location) { // Envoyer des données au serveur
+void Response::handlePOST(const Request& req, const ServerBlock& server, const LocationBlock* location) { // Envoyer des données au serveur
     // Verifier si methode est allowed selon bloc Location du server
     if (!isMethodAllowed(location, "POST")) {
         setStatus(405);
@@ -176,7 +176,8 @@ void Response::handlePOST(const Request& req, const LocationBlock* location) { /
     }
 
     // Vérifier que le body ne dépasse pas client_max_body_size
-    if (location && location->maxBodySize > 0 && body.size() > location->maxBodySize) {
+    size_t maxSize = location ? location->maxBodySize : server.getClientMaxBodySize();
+    if (maxSize > 0 && body.size() > maxSize) {
         setStatus(413);
         setBody("413 Payload Too Large");
         return;
@@ -201,8 +202,10 @@ void Response::handleDELETE(const Request& req, const ServerBlock& server, const
     // recupere le root du location bloc et construit le chemin avec
     std::string root = location ? location->root : server.getRoot();
     std::string relPath = req.getPath();
-    if (location)
+    if (location && req.getPath().find(location->path) == 0)
         relPath = relPath.substr(location->path.length());
+    else
+        relPath = req.getPath();
 
     std::string fullPath = root + relPath;
     std::string dir = fullPath.substr(0, fullPath.find_last_of('/'));
@@ -247,12 +250,17 @@ void Response::handleCGI(const Request& req, const LocationBlock* location) {
     }
 
     // recup interpreteur dans location block
-    std::string interpreter;
-    if (location && !location->cgiPath.empty()) {
-        interpreter = location->cgiPath;
+    if (!location || location->cgiPath.empty()) {
+        setStatus(500);
+        setBody("500 Internal Server Error: CGI script not defined");
+        return;
     }
-    else {
-        interpreter = "/usr/bin/python3";
+    std::string interpreter = location->cgiPath;
+    // protection : seulement python autorisé
+    if (interpreter.find("python") == std::string::npos) {
+        setStatus(500);
+        setBody("500 Internal Server Error: unsupported CGI interpreter");
+        return;
     }
 
     // generer chemin selon location block
@@ -294,7 +302,7 @@ void Response::handleCGI(const Request& req, const LocationBlock* location) {
 
         // prépare args pour execve
         char* const argv[] = {
-            (char*)"/usr/bin/python3",          // interpréteur
+            (char*)interpreter.c_str(),          // interpréteur
             (char*)scriptPath.c_str(),          // script à exécuter
             NULL
         };
@@ -340,7 +348,7 @@ void Response::buildFromRequest(const Request& req, const ServerBlock& server) {
     else if (req.getMethod() == "GET")
         handleGET(req, server, location);
     else if (req.getMethod() == "POST")
-        handlePOST(req, location);
+        handlePOST(req, server, location);
     else if (req.getMethod() == "DELETE")
         handleDELETE(req, server, location);
     else {
@@ -361,6 +369,9 @@ std::string Response::returnResponse() const {
         response << it->first << ": " << it->second << "\r\n";
     }
 
+    // 2.2 Expliciter fermeture de la connexion
+    response << "Connection: close\r\n";
+    
     // 3. Ligne vide obligatoire
     response << "\r\n";
 

@@ -1,18 +1,17 @@
 #include "ServerBlock.hpp"
-#include "ConfigUtils.hpp"
 #include <fcntl.h>
 
 static bool hasListen = false;
 static bool hasClientMaxBodySize = false;
 static bool hasServerName = false;
 static bool hasRoot = false;
-static bool hasIndex = false;
+static bool hasIndex = false; 
 
 bool    ServerBlock::isValidClientBodySize(const Directive& directive)
 {
     if (directive.value.empty())
     {
-        std::cout << "Erreur config: manque client max body size ??\n";
+        std::cerr << "Erreur config: manque client max body size\n";
         return false;
     }
     std::string size = directive.value;
@@ -26,7 +25,7 @@ bool    ServerBlock::isValidClientBodySize(const Directive& directive)
         long    result = std::stol(size);
         if (result < INT_MIN ||  result > INT_MAX)
         {
-            std::cout << "Erreur config: bodymaxsize < intmin ou > intmax\n";
+            LOG_ERR("Bodymaxsize < intmin ou > intmax");
             return false;
         }
         return true;
@@ -36,7 +35,7 @@ bool    ServerBlock::isValidClientBodySize(const Directive& directive)
         unit == "g" || unit == "G"){
             return true;
         }
-    std::cout << "Erreur config: clientmaxbodysize invalide\n";
+    LOG_ERR("Clientmaxbodysize invalide");
     return false;
 }
 
@@ -44,7 +43,7 @@ bool    ServerBlock::isValidPort(const Directive& directive)
 {
     if (directive.value.empty()) // port =  directive.value
     {
-        std::cout << "Erreur config: listen to what ??\n";
+        LOG_ERR("Listen to what ??");
         return false;
     }
 
@@ -63,21 +62,21 @@ bool    ServerBlock::isValidPort(const Directive& directive)
         _host = host;
         if (port.empty())
         {
-            std::cout << "directive listen invalid: pas de port après le ':'\n";
+            LOG_ERR("Directive listen invalid: pas de port après le ':'");
             return false;
         }
         for (size_t i = 0; i < port.length(); ++i)
         {
             if (!std::isdigit(port[i]))
             {
-                std::cout << "Erreur config: le port " << port << " n'est pas valide\n";
+                std::cerr << "Le port " << port << " n'est pas valide\n";
                 return false;
             }
         }
         long   result = std::stol(port);
         if (result < INT_MIN || result > INT_MAX || result <= 0 || result > 65535)
         {
-            std::cout << "Erreur config: le port " << port << " n'est pas valide\n";
+            std::cerr << "Le port " << port << " n'est pas valide\n";
             return false;
         }
         return true;
@@ -93,7 +92,7 @@ bool    ServerBlock::isValidPort(const Directive& directive)
     long    result = std::stol(directive.value);
     if (result < INT_MIN || result > INT_MAX || result <= 0 || result > 65535)
     {
-        std::cout << "Erreur config: le port " << directive.value << " n'est pas valide\n";
+        std::cerr << "Erreur config: le port " << directive.value << " n'est pas valide\n";
         return false;
     }
     return true;
@@ -105,7 +104,7 @@ bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
     // try to open location path
     if (location.path.empty())
     {
-        std::cout << "Config error: invalid location path: " << location.path << std::endl;
+        std::cerr << "Config error: invalid location path: " << location.path << std::endl;
         return false; 
     }
     
@@ -121,13 +120,13 @@ bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
         {
             hasAllowMethods = true;
             if (currentDir.value.empty()){
-                std::cout << "Config error: empty allow_methods\n";
+                LOG_ERR("Empty allow_methods");
                 return false;
             }
             std::vector<std::string>    methods  = splitLine(currentDir.value, " \t");
             for (size_t j = 0; j < methods.size(); ++j){
                 if (methods[j] != "GET" && methods[j] != "POST" && methods[j] != "DELETE"){
-                    std::cout << "Config error: method not allowed: " << methods[j] << std::endl;
+                    std::cerr << "Config error: method not allowed: " << methods[j] << std::endl;
                     return false;
                 }
             }       
@@ -136,14 +135,14 @@ bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
             hasRoot = true;
             if (currentDir.value.empty())
             {
-                std::cout << "Config errror: no root\n";
+                LOG_ERR("No root");
                 return false;
             }
         }
         else if (currentDir.key == "index"){
             hasIndex = true;
             if (currentDir.value.empty()){
-                std::cout << "Config error: no index\n";
+                LOG_ERR("No index");
                 return false;
             }
         }
@@ -154,7 +153,7 @@ bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
 bool    ServerBlock::isValidHost(const Directive& directive)
 {
     if (directive.value.empty()){
-        std::cout << "token host sans host\n";
+        LOG_ERR("Token host sans host");
         return false;
     }
     if (directive.value == "localhost" || directive.value == "0.0.0.0"){
@@ -176,19 +175,19 @@ bool    ServerBlock::isValidHost(const Directive& directive)
 
     //check la validité de l'hôte
     if(bytes.size() != 4){
-        std::cout << "Hôte (IP) invalide: "<< host << std::endl;
+        std::cerr << "Hôte (IP) invalide: "<< host << std::endl;
         return false;
     }
     for (size_t i = 0; i < 4; ++i){
         for (size_t j = 0; j < bytes[i].size(); j++){
             if (!std::isdigit(bytes[i][j])){
-                std::cout << "Hôte (IP) invalide: " << host << std::endl;
+                std::cerr << "Hôte (IP) invalide: " << host << std::endl;
                 return false;
             }
         }
         int byteValue = std::stoi(bytes[i]);
         if (byteValue < 0 || byteValue > 255){
-            std::cout << "Hôte (IP) invalide: " << host << std::endl;   
+            std::cerr << "Hôte (IP) invalide: " << host << std::endl;   
             return false;
         }
     }
@@ -237,7 +236,7 @@ void    ServerBlock::unsetDoubleDirective()
     hasRoot = false;
     hasIndex = false;
 }
-// TO DO doublons à vérifier (check le booléen)
+
 bool    ServerBlock::checkServerBlock(const ServerBlock& server)
 {
     for (size_t i = 0; i < server.directives.size(); ++i)
@@ -245,49 +244,71 @@ bool    ServerBlock::checkServerBlock(const ServerBlock& server)
         const Directive& currentDir = server.directives[i];
         if (isDoubleDirective(currentDir))
         {
-            std::cout << "Erreur config: directive " << currentDir.key << " déjà présente\n";
+            std::cerr << "Erreur config: directive " << currentDir.key << " déjà présente\n";
             return false;
         }
         if (currentDir.key == "listen")
         {
             if (!isValidPort(currentDir))
                 return false;
-            _port = std::stoi(currentDir.value);
+            std::string value = currentDir.value;
+            size_t sep = value.find(':');
+            std::string host = "0.0.0.0";
+            std::string portStr;
+            if (sep != std::string::npos) {
+                host = value.substr(0, sep);
+                portStr = value.substr(sep + 1);
+            } else {
+                portStr = value;
+            }
+            if (portStr.empty()) {
+                LOG_ERR("Erreur config: port invalide dans listen");
+                return false;
+            }
+            int port = std::atoi(portStr.c_str());
+            std::pair<std::string, int> entry = std::make_pair(host, port);
+            if (_listen.find(entry) != _listen.end()) {
+                std::cerr << "Erreur config: listen " << host << ":" << port << " dupliqué\n";
+            }
+            else {
+                _listen.insert(entry);
+            }
         }
         else if (currentDir.key == "root"){
             if (currentDir.value.empty())
             {
-                std::cout << "Config errror: no root\n";
+                LOG_ERR("No root");
                 return false;
             }
             std::string path = server.getRoot();
             int fd = open(path.c_str(), O_DIRECTORY);
             if (fd < 0) {
-                std::cout << "Erreur: ce n'est pas un dossier\n";
+                LOG_ERR("Ce n'est pas un dossier");
                 return false;
             }
             close(fd);
             if (path.c_str() != "www") {
-                std::cout << "Erreur: mauvais dossier root\n";
+                LOG_ERR("Mauvais dossier root");
                 return false;
             }
+            setRoot(currentDir.value);
         }
         else if (currentDir.key == "index"){
             if (currentDir.value.empty()){
-                std::cout << "Config error: no index\n";
+                LOG_ERR("Config error: no index");
                 return false;
             }
             std::string path2 = server.getIndex();
             if (access(path2.c_str(), F_OK) != 0) {
-                std::cout << "Erreur: cannot access index " << server.getIndex() << std::endl;
+                std::cerr << "Erreur config: cannot access index " << server.getIndex() << std::endl;
                 return false;
             }
+            setIndex(currentDir.value);
         }
         else if (currentDir.key == "client_max_body_size") 
         {
             if (!isValidClientBodySize(currentDir))
                 return false;
-            // _clientMaxBodySize = currentDir.value;
             std::string sizeStr = currentDir.value;
             long size = std::atoi(sizeStr.c_str());
             if (!sizeStr.empty() && isdigit(sizeStr[sizeStr.length() - 1]) == 0) {
@@ -296,53 +317,58 @@ bool    ServerBlock::checkServerBlock(const ServerBlock& server)
                 else if (unit == 'm') size *= 1024 * 1024;
                 else if (unit == 'g') size *= 1024 * 1024 * 1024;
             }
-            _clientMaxBodySize = static_cast<size_t>(size);
+            setClientMaxBodySize(static_cast<size_t>(size));
         }
         else if (currentDir.key == "server_name")
         {
             if (currentDir.value.empty())
             {
-                std::cout << "token server_name sans name\n";
+                LOG_ERR("Token server_name sans name");
                 return false;
             }
-            // std::set<std::string>    names = splitLineSet(currentDir.value, " \t");
             _serverName = currentDir.value;
+            // std::set<std::string> names = splitLineSet(currentDir.value, " \t");
+            // if (names.empty())
+            // {
+            //     LOG_ERR("Server_name vide");
+            //     return false;
+            // }
+            // _serverNames.insert(names.begin(), names.end());
         }
         else if (currentDir.key == "error_page")
         {
             if (currentDir.value.empty())
             {
-                std::cout << "Erreur config: manque page(s) d'erreur\n";
+                LOG_ERR("Manque page(s) d'erreur");
                 return false;
             }
-            // stocker error pages dans _errorPages
             std::vector<std::string> errorPart = splitLine(currentDir.value, " \t");
             if (errorPart.size() >= 2) {
                 int code = std::atoi(errorPart[0].c_str());
                 std::string path = errorPart[1];
                 if (access(path.c_str(), F_OK) != 0) {
-                    std::cout << "Erreur config: page d'erreur " << path << " introuvable\n";
+                    std::cerr << "Erreur config: page d'erreur " << path << " introuvable\n";
                     return false;
                 }
-                _errorPages[code] = path;
+                addErrorPage(code, path);
             }
             else {
-                std::cout << "Erreur config: mauvais format error_pages\n";
+                LOG_ERR("Mauvais format error_pages");
                 return false;
             }
         }
         else
         {
-            std::cout << "Directive non autorisée: " << server.directives[i].key << std::endl;
+            std::cerr << "Erreur config: directive non autorisée: " << server.directives[i].key << std::endl;
             return false;
         }
     }
     for (size_t i = 0; i < server._locations.size(); ++i){
-        // const LocationBlock& loc = server._locations[i];
-        if (!checkLocationBlock(_locations[i]))
+        _locations.push_back(server._locations[i]);
+        if (!checkLocationBlock(_locations.back()))
             return false;
-        if (!fillLocationBlock(_locations[i])) {
-            std::cout << "Erreur config: remplissage du bloc location échoué\n";
+        if (!fillLocationBlock(_locations.back())) {
+            LOG_ERR("Remplissage du bloc location échoué");
             return false;
         }
     }
