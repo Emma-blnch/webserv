@@ -25,13 +25,17 @@
 
         <section id="delete">
             <h2>🗑️ DELETE</h2>
-            <p>
-                Supprimer une image.
-            </p>
+            <div id="img">
+                <p>
+                    Supprimer une image.
+                </p>
+                <img src="uploads/canard-rm.png" alt="canard-a-supp" width="100">
+            </div>
+            
             <button onclick="deleteFile()">Delete</code></button>
             <script>
                 function deleteFile() {
-                    fetch('uploads/test.txt', { method: 'DELETE' })
+                    fetch('uploads/canard-rm.png', { method: 'DELETE' })
                         .then(res => res.text())
                         .then(text => alert("Réponse : " + text))
                         .catch(err => alert("Erreur : " + err));
@@ -44,7 +48,6 @@
         <ul>
             <li><a href="page-inexistante.html">Lien cassé (404)</a></li>
             <li><a href="forbidden.html">Accès interdit (403)</a></li>
-            <li><a href="trigger-500">Erreur interne (500)</a></li>
         </ul>
     </section>    
 </body>

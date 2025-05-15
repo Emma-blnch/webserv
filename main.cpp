@@ -1,5 +1,9 @@
-#include "Request.hpp"
-#include "Response.hpp"
+#include "http/Request.hpp"
+#include "http/Response.hpp"
+#include "config/ConfigFile.hpp"
+#include "config/LocationBlock.hpp"
+#include "config/ServerBlock.hpp"
+
 #include <sys/socket.h> // pour socket, bind, listen, accept, recv, send...
 #include <netinet/in.h>     // pour sockaddr_in, htons, htonl, INADDR_ANY...
 #include <arpa/inet.h>      // pour inet_addr, inet_ntoa...
@@ -13,6 +17,21 @@
 #define BUFFER_SIZE 8192
 
 int main() {
+    // parser fichier de config
+    ConfigFile config;
+    if (!config.parseConfigFile("file.conf")) {
+        std::cerr << "Erreur parsing config.\n";
+        return 1;
+    }
+
+    std::vector<ServerBlock> servers = config.getServers();
+    if (servers.empty()) {
+        std::cerr << "Aucun bloc serveur valide.\n";
+        return 1;
+    }
+
+    const ServerBlock& server = servers[0];
+
     // créer une socket serveur
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket < 0) {
@@ -23,8 +42,12 @@ int main() {
     // configurer son adresse
     sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(8080);
-    serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
+    serverAddress.sin_port = htons(server.getPort());
+    std::cout << "port " << server.getPort() << std::endl;
+    serverAddress.sin_addr.s_addr = inet_addr(server.getHost().c_str());
+    std::cout << "host " << server.getHost() << std::endl;
+    // serverAddress.sin_port = htons(8080);
+    // serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
 
     // bind le socket à un certain port
     bind(serverSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
@@ -79,7 +102,8 @@ int main() {
                         req.parseRawRequest(buffer);
                 
                         Response res;
-                        res.buildFromRequest(req);
+                        res.setErrorPages(server.getErrorPages());
+                        res.buildFromRequest(req, server);
                         std::string responseStr = res.returnResponse();
                 
                         send(clientFd, responseStr.c_str(), responseStr.size(), 0);

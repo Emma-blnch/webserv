@@ -10,10 +10,10 @@ void Response::loadErrorPageIfNeeded() {
 
     std::map<int, std::string>::const_iterator it = _errorPages.find(_status);
     if (it != _errorPages.end()) {
-        std::string root = "../www";
-        std::ifstream file(root + it->second.c_str());
+        std::string path = it->second;
+        std::ifstream file(path.c_str());
         if (file) {
-            std::cout << "page loaded : " << root + it->second << std::endl;
+            std::cout << "page loaded : " << path << std::endl;
             std::ostringstream content;
             content << file.rdbuf();
             file.close();

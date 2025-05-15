@@ -237,7 +237,7 @@ void    ServerBlock::unsetDoubleDirective()
     hasIndex = false;
 }
 
-bool    ServerBlock::checkServerBlock(const ServerBlock& server)
+bool    ServerBlock::checkServerBlock(ServerBlock& server)
 {
     for (size_t i = 0; i < server.directives.size(); ++i)
     {
@@ -273,6 +273,8 @@ bool    ServerBlock::checkServerBlock(const ServerBlock& server)
             else {
                 _listen.insert(entry);
             }
+            setPort(port);
+            setHost(host);
         }
         else if (currentDir.key == "root"){
             if (currentDir.value.empty())
