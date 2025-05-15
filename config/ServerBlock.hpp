@@ -37,7 +37,7 @@ class ServerBlock
         size_t getClientMaxBodySize() const { return _clientMaxBodySize;};
         const std::map<int, std::string>& getErrorPages() const { return _errorPages; };
         const std::vector<LocationBlock>& getLocations() const { return _locations; }
-        const std::set<std::pair<std::string, int>>& getListen() const { return _listen; }
+        const std::set<std::pair<std::string, int> >& getListen() const { return _listen; }
 
         bool    checkServerBlock(const ServerBlock& server);
         bool    checkLocationBlock(const LocationBlock& location);
@@ -79,7 +79,7 @@ class ServerBlock
         std::string                 _index;
         std::map<int, std::string>  _errorPages;
         size_t                 _clientMaxBodySize;
-        std::set<std::pair<std::string, int>> _listen;
+        std::set<std::pair<std::string, int> > _listen;
 };
 
 #endif

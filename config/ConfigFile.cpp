@@ -139,7 +139,7 @@ bool    ConfigFile::extractServerBlockContent(ServerBlock& server, std::ifstream
             if (!extractDirective(line, directive))
                 return false;
             server.directives.push_back(directive);
-            std::cout << "Server directive: " << directive.key << " " << directive.value << std::endl;
+            // std::cout << "Server directive: " << directive.key << " " << directive.value << std::endl;
         }
         else
         {
@@ -171,7 +171,7 @@ bool    ConfigFile::extractServerBlocks(std::ifstream& file)
             if (!extractServerBlockContent(currentServer, file))
                 return false;
             _servers.push_back(currentServer);
-            std::cout << "Added server block\n";
+            // std::cout << "Added server block\n";
         }
     }
     if (_servers.empty())

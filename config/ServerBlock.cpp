@@ -280,25 +280,25 @@ bool    ServerBlock::checkServerBlock(const ServerBlock& server)
                 LOG_ERR("No root");
                 return false;
             }
-            std::string path = server.getRoot();
+            std::string path = currentDir.value;
             int fd = open(path.c_str(), O_DIRECTORY);
             if (fd < 0) {
                 LOG_ERR("Ce n'est pas un dossier");
                 return false;
             }
             close(fd);
-            if (path.c_str() != "www") {
+            if (path != "www" && path != "./www" && path.find("www") != 0) {
                 LOG_ERR("Mauvais dossier root");
                 return false;
             }
-            setRoot(currentDir.value);
+            setRoot(path);
         }
         else if (currentDir.key == "index"){
             if (currentDir.value.empty()){
                 LOG_ERR("Config error: no index");
                 return false;
             }
-            std::string path2 = server.getIndex();
+            std::string path2 = _root + "/" + currentDir.value;
             if (access(path2.c_str(), F_OK) != 0) {
                 std::cerr << "Erreur config: cannot access index " << server.getIndex() << std::endl;
                 return false;
