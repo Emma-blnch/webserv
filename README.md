@@ -1,7 +1,5 @@
-# Mes ajouts faits
-- ajout de pages html custom (page d'accueil + pages d'erreurs)
-- ajout d'un dossier cgi-bin contenant un script python executer par les cgi
-- parsing fichiers config finit (ajout des directives du bloc locaiton stockees en attribut, pages d'erreur stockees)
+# Check a faire sur parsing
+- variables static bool ne leak pas (sinon remplacer par un std::set
 
 ---  
 
