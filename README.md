@@ -1,6 +1,5 @@
 # Check a faire sur parsing
 - variables static bool ne leak pas (sinon remplacer par un std::set
-- dans checkServerBlock() : sur le currentDir.key == "listen", le "_port = std::stoi(currentDir.value);" ne marchera pas s'il y a un IP + Port (listen 127.0.0.0:80) mais que s'il y a le port (listen 80)
 
 ---  
 
