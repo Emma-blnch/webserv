@@ -101,46 +101,34 @@ void Response::handleGET(const Request& req, const ServerBlock& server, const Lo
         setStatus(405);
         return;
     }
-    
     // recupere le root du location bloc et construit le chemin avec
     std::string root = location ? location->root : server.getRoot();
     std::string relPath = req.getPath();
     if (location)
         relPath = relPath.substr(location->path.length());
-
     std::string fullPath = root + relPath;
-
-    // Traduire l'URI en chemin réel
-    // std::string path = "." + req.getPath();
-
-    // Vérifier que le fichier existe
     if (access(fullPath.c_str(), F_OK) != 0) {
         setStatus(404);
-        // setBody("404 Not Found");
         return;
     }
     // Vérifier que je peux le lire
     if (access(fullPath.c_str(), R_OK) != 0) {
         setStatus(403);
-        // setBody("403 Forbidden");
         return;
     }
     // Vérifier que j'arrive à bien lire tout le fichier
     std::ifstream file(fullPath.c_str());
     if (!file) {
         setStatus(500);
-        // setBody("500 Internal Server Error");
         return;
     }
     // Sinon, lire tout le contenu pour le mettre dans le body
     std::ostringstream content;
     content << file.rdbuf();
     file.close();
-
     // Déterminer le type MIME (Content-Type)
     std::string ext = getExtension(fullPath);   // -> ".html"
     std::string mime = guessContentType(ext); // -> "text/html"
-
     // Préparer la réponse
     setStatus(200);
     setBody(content.str());
@@ -154,10 +142,8 @@ void Response::handlePOST(const Request& req, const ServerBlock& server, const L
         setStatus(405);
         return;
     }
-    
     // Vérifier la présence d’un body
     std::string body = req.getBody();
-
     // S’assurer qu’il est cohérent avec Content-Length
     std::string contentLenStr = req.getHeader("Content-Length");
     if (contentLenStr.empty())
@@ -174,7 +160,6 @@ void Response::handlePOST(const Request& req, const ServerBlock& server, const L
         setBody("400 Bad Request: Incorrect body size");
         return;
     }
-
     // Vérifier que le body ne dépasse pas client_max_body_size
     size_t maxSize = location ? location->maxBodySize : server.getClientMaxBodySize();
     if (maxSize > 0 && body.size() > maxSize) {
@@ -182,10 +167,8 @@ void Response::handlePOST(const Request& req, const ServerBlock& server, const L
         setBody("413 Payload Too Large");
         return;
     }
-
     // Traiter le contenu
     setBody("POST received: " + body);
-
     // Préparer la réponse
     setStatus(200);
     setHeader("Content-Type", "text/plain");
@@ -209,34 +192,31 @@ void Response::handleDELETE(const Request& req, const ServerBlock& server, const
 
     std::string fullPath = root + relPath;
     std::string dir = fullPath.substr(0, fullPath.find_last_of('/'));
-
-    // Traduire l’URI en chemin réel
-    // std::string path = "." + req.getPath();
-    // // Extraire le dossier
-    // std::string dir = path.substr(0, path.find_last_of('/'));
     if (dir.empty())
         dir = ".";
+    // Traduire l’URI en chemin réel
+    // std::string path = "." + req.getPath();
 
     // Vérifier que le fichier existe
     if (access(fullPath.c_str(), F_OK) != 0) {
         setStatus(404);
-        // setBody("404 Not Found");
         return;
     }
     // Vérifier que je peux modifier le dossier
     if (access(dir.c_str(), W_OK) != 0) {
         setStatus(403);
-        // setBody("403 Forbidden");
         return;
     }
-
+    // Vérifier que je peux modifier le fichier
+    if (access(fullPath.c_str(), W_OK) != 0) {
+        setStatus(403);
+        return;
+    }
     // Essayer de supprimer
     if (remove(fullPath.c_str()) != 0) {
         setStatus(500);
-        // setBody("500 Internal Server Error");
         return;
     }
-
     // Si suppression réussie → 204 No Content (aucun body)
     setStatus(204);
 }
@@ -262,7 +242,6 @@ void Response::handleCGI(const Request& req, const LocationBlock* location) {
         setBody("500 Internal Server Error: unsupported CGI interpreter");
         return;
     }
-
     // generer chemin selon location block
     std::string scriptPath;
     if (location && !location->root.empty()) {
@@ -271,7 +250,6 @@ void Response::handleCGI(const Request& req, const LocationBlock* location) {
     else {
         scriptPath = ".." + req.getPath();
     }
-
     // vérifier que le script existe et est exécutable
     if (access(scriptPath.c_str(), F_OK) != 0) {
         setStatus(404);
@@ -281,14 +259,12 @@ void Response::handleCGI(const Request& req, const LocationBlock* location) {
         setStatus(403);
         return;
     }
-
     // créer un pipe pour récupérer la sortie du script
     int pipefd[2];
     if (pipe(pipefd) == -1) {
         setStatus(500);
         return;
     }
-
     pid_t pid = fork();
     if (pid < 0) {
         setStatus(500);
@@ -306,7 +282,6 @@ void Response::handleCGI(const Request& req, const LocationBlock* location) {
             (char*)scriptPath.c_str(),          // script à exécuter
             NULL
         };
-
         // prépare variables d'environnement minimales
         char* const envp[] = {
             (char*)"GATEWAY_INTERFACE=CGI/1.1",
@@ -330,7 +305,6 @@ void Response::handleCGI(const Request& req, const LocationBlock* location) {
         }
         close(pipefd[0]);
         waitpid(pid, NULL, 0); // attend fin du processus enfant
-
         // préparer la réponse
         setStatus(200);
         setBody(output);
@@ -360,21 +334,16 @@ void Response::buildFromRequest(const Request& req, const ServerBlock& server) {
 // response sent
 std::string Response::returnResponse() const {
     std::ostringstream response;
-
     // 1. Status line
     response << "HTTP/1.1 " << _status << " " << _stateMsg << "\r\n";
-
     // 2. Headers
     for (std::map<std::string, std::string>::const_iterator it = _headers.begin(); it != _headers.end(); ++it) {
         response << it->first << ": " << it->second << "\r\n";
     }
-
     // 2.2 Expliciter fermeture de la connexion
     response << "Connection: close\r\n";
-    
     // 3. Ligne vide obligatoire
     response << "\r\n";
-
     // 4. Body (sauf si code l’interdit)
     if (!(_status == 204 || _status == 304)) {
         response << _body;

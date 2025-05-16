@@ -29,15 +29,15 @@ on doit :
 - Supporter l’exécution d’un CGI pour une extension particulière (.py, .pl, etc.).
 - Passer les bonnes variables d’environnement (au moins REQUEST_METHOD, CONTENT_LENGTH, SCRIPT_NAME, QUERY_STRING, SERVER_PROTOCOL, etc.)
 
-5. Méthode DELETE   
+5. Méthode DELETE - OK   
 Fonctionnelle pour les fichiers, mais à tester :
 - Doit supprimer uniquement si permissions autorisées.
 - Respecter l'allowed_methods du location.
 
-6. Limiter le client_max_body_size   
+6. Limiter le client_max_body_size - OK   
 Déjà implémenté côté serveur : a tester pour voir si ça renvoie bien 413.
 
-7. Vérifier que les méthodes non supportées renvoient bien erreur 405   
+7. Vérifier que les méthodes non supportées renvoient bien erreur 405 - OK   
 
 8. Tests finaux   
 Egalement faire :

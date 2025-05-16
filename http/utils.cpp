@@ -44,3 +44,28 @@ std::string toLower(const std::string& s) {
     std::transform(out.begin(), out.end(), out.begin(), ::tolower);
     return out;
 }
+
+std::string normalizePath(const std::string& path) {
+    std::vector<std::string> parts;
+    std::istringstream iss(path);
+    std::string token;
+
+    while (std::getline(iss, token, '/')) {
+        if (token.empty() || token == ".")
+            continue;
+        if (token == "..") {
+            if (!parts.empty())
+                parts.pop_back(); // monte d'un dossier
+        }
+        else {
+            parts.push_back(token);
+        }
+    }
+    std::string cleanPath = "/";
+    for (size_t i = 0; i < parts.size(); ++i) {
+        cleanPath += parts[i];
+        if (i + 1 != parts.size())
+            cleanPath += "/";
+    }
+    return cleanPath;
+}

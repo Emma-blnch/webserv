@@ -23,6 +23,7 @@ void Request::parseRequestLine(const std::string& line) {
         }
         else if (i == 1)
             _path = token;
+        _path = normalizePath(_path); // éviter accès à fichiers protégés
         start = end + 1;
         end = line.find(' ', start);
         i++;
