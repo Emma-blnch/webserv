@@ -1,4 +1,4 @@
-NAME = webserv
+NAME = prog
 CC = c++
 CPPFLAGS = -Wall -Wextra -Werror -std=c++98
 

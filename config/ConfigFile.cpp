@@ -70,10 +70,9 @@ bool    ConfigFile::extractLocationBlockContent(LocationBlock& location, std::if
     while (std::getline(file, line))
     {
         line = removeCommentsAndEndSpaces(line);
+        std::cout << "location block line: " << line << std::endl; 
         if (line.empty() || line[0] == '#')
             continue;
-        if (isBlockEnd(line))
-            return true;
         std::vector<std::string>    tokens = splitLine(line, " \t");
         if (isServerBlockStart(tokens)|| isLocationBlockStart(tokens))
         {
@@ -81,10 +80,16 @@ bool    ConfigFile::extractLocationBlockContent(LocationBlock& location, std::if
             return false;
         }
         if (isDirective(line)){
+            // std::cout << line << "\n";
             Directive directive;
             if (!extractDirective(line, directive))
                 return false;
             location.directives.push_back(directive);
+        }
+        else if (isBlockEnd(line))
+        {
+            std::cout << "block end\n";
+            return true;
         }
         else
         {
@@ -104,6 +109,7 @@ bool    ConfigFile::extractServerBlockContent(ServerBlock& server, std::ifstream
     while (std::getline(file, line))
     {
         line = removeCommentsAndEndSpaces(line);
+        std::cout << line << std::endl;
         if (line.empty() || line[0] == '#')
             continue;
         if (isBlockEnd(line))

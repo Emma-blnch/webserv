@@ -4,7 +4,6 @@
 bool fillLocationBlock(LocationBlock& loc) {
     for (size_t i = 0; i < loc.directives.size(); ++i) {
         const Directive& dir = loc.directives[i];
-
         if (dir.key == "allow_methods") {
             loc.allowedMethods = splitLine(dir.value, " \t");
             if (loc.allowedMethods.empty()) {

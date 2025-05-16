@@ -5,9 +5,8 @@ std::string removeCommentsAndEndSpaces(const std::string& line)
     //  on enlève le commentaire de la ligne s'il y a un #
     std::string result = line;
     size_t  commentPos = result.find('#');
-    if (commentPos == std::string::npos)
-        return line; //pas de commentaire
-    result.erase(commentPos, line.length());
+    if (commentPos != std::string::npos)
+        result.erase(commentPos, line.length());
 
     // Trim les espaces et tabulations pour retourner la chaine propre
     size_t  start = 0;

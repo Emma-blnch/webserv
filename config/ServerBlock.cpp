@@ -126,17 +126,30 @@ bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
         return false; 
     }
     
-    bool    hasAllowMethods = false;
-    bool    hasRoot = false;
-    bool    hasIndex = false;
+    // bool    hasAllowMethods = false;
+    bool    root = false;
+    bool    autoIndex = false;
+    bool    index = false;
 
     for (size_t i = 0; i < location.directives.size(); ++i)
     {
         const   Directive& currentDir = location.directives[i];
-
+        if (currentDir.key == "index"){
+            index = true;
+        if (currentDir.value.empty()){
+            LOG_ERR("No index");
+            return false;
+            }
+        }
+        else if (currentDir.key == "autoindex"){
+            autoIndex = true;
+            if (currentDir.value.empty()){
+                LOG_ERR("No autoindex");
+                return false;
+            }
+        }
         if (currentDir.key == "allow_methods")
         {
-            hasAllowMethods = true;
             if (currentDir.value.empty()){
                 LOG_ERR("Empty allow_methods");
                 return false;
@@ -150,22 +163,20 @@ bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
             }       
         }
         else if (currentDir.key == "root"){
-            hasRoot = true;
+            root = true;
             if (currentDir.value.empty())
             {
                 LOG_ERR("No root");
                 return false;
             }
         }
-        else if (currentDir.key == "index"){
-            hasIndex = true;
-            if (currentDir.value.empty()){
-                LOG_ERR("No index");
-                return false;
-            }
-        }
     }
-    return (hasRoot && hasAllowMethods && hasIndex);
+    if (!index && !autoIndex)
+    {
+        std::cout << "No index in location block\n";
+        return false;
+    }
+    return (root);
 }
 
 bool    ServerBlock::isValidHost(const Directive& directive)
