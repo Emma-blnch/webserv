@@ -237,6 +237,25 @@ void    ServerBlock::unsetDoubleDirective()
     hasIndex = false;
 }
 
+const std::map<int, std::string>& getValidStatus() {
+    static std::map<int, std::string> m;
+    if (m.empty()) {
+        m[200] = "OK";
+        m[201] = "Created";
+        m[204] = "No Content";
+        m[400] = "Bad Request";
+        m[403] = "Forbidden";
+        m[404] = "Not Found";
+        m[405] = "Method Not Allowed";
+        m[413] = "Payload Too Large";
+        m[414] = "URI Too Long";
+        m[500] = "Internal Server Error";
+        m[501] = "Not Implemented";
+        m[505] = "HTTP Version Not Supported";
+    }
+    return m;
+}
+
 bool    ServerBlock::checkServerBlock(ServerBlock& server)
 {
     for (size_t i = 0; i < server.directives.size(); ++i)
@@ -289,7 +308,7 @@ bool    ServerBlock::checkServerBlock(ServerBlock& server)
                 return false;
             }
             close(fd);
-            if (path != "www" && path != "./www" && path.find("www") != 0) {
+            if (path != "www" && path != "./www") {
                 LOG_ERR("Mauvais dossier root");
                 return false;
             }
@@ -347,6 +366,11 @@ bool    ServerBlock::checkServerBlock(ServerBlock& server)
             std::vector<std::string> errorPart = splitLine(currentDir.value, " \t");
             if (errorPart.size() >= 2) {
                 int code = std::atoi(errorPart[0].c_str());
+                std::map<int, std::string>::const_iterator it = getValidStatus().find(code);
+                if (it == getValidStatus().end()) {
+                    LOG_ERR("Code d'erreur invalide");
+                    return false;
+                }
                 std::string path = errorPart[1];
                 if (access(path.c_str(), F_OK) != 0) {
                     std::cerr << "Erreur config: page d'erreur " << path << " introuvable\n";
