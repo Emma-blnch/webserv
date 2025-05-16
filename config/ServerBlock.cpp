@@ -39,7 +39,7 @@ bool    ServerBlock::isValidClientBodySize(const Directive& directive)
     return false;
 }
 
-bool    ServerBlock::isValidPort(const Directive& directive)
+bool    ServerBlock::validateListen(const Directive& directive)
 {
     if (directive.value.empty()) // port =  directive.value
     {
@@ -50,16 +50,16 @@ bool    ServerBlock::isValidPort(const Directive& directive)
     // Format host::port dans listen
     std::string value = directive.value;
     size_t      sep = value.find(':');
+    std::string host = "0.0.0.0";
 
     if (sep != std::string::npos){
-        std::string host = value.substr(0, sep);
+        host = value.substr(0, sep);
         std::string port = value.substr(sep + 1);
         Directive hostDirective;
         hostDirective.key = "host";
         hostDirective.value = host;
         if (!isValidHost(hostDirective))
             return false;
-        _host = host;
         if (port.empty())
         {
             LOG_ERR("Directive listen invalid: pas de port après le ':'");
@@ -79,6 +79,15 @@ bool    ServerBlock::isValidPort(const Directive& directive)
             std::cerr << "Le port " << port << " n'est pas valide\n";
             return false;
         }
+        std::pair<std::string, int> entry = std::make_pair(host, static_cast<int>(result));
+        if (_listen.find(entry) != _listen.end()) {
+            std::cerr << "Erreur config: listen " << host << ":" << static_cast<int>(result) << " dupliqué\n";
+        }
+        else {
+            _listen.insert(entry);
+        }
+        setPort(static_cast<int>(result));
+        setHost(host);
         return true;
     }
     // sinon (juste listen port)
@@ -95,6 +104,15 @@ bool    ServerBlock::isValidPort(const Directive& directive)
         std::cerr << "Erreur config: le port " << directive.value << " n'est pas valide\n";
         return false;
     }
+    std::pair<std::string, int> entry = std::make_pair(host, static_cast<int>(result));
+    if (_listen.find(entry) != _listen.end()) {
+        std::cerr << "Erreur config: listen " << host << ":" <<  static_cast<int>(result) << " dupliqué\n";
+    }
+    else {
+        _listen.insert(entry);
+    }
+    setPort(static_cast<int>(result));
+    setHost(host);
     return true;
 }
 
@@ -153,7 +171,7 @@ bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
 bool    ServerBlock::isValidHost(const Directive& directive)
 {
     if (directive.value.empty()){
-        LOG_ERR("Token host sans host");
+        LOG_ERR("host is missing");
         return false;
     }
     if (directive.value == "localhost" || directive.value == "0.0.0.0"){
@@ -237,7 +255,7 @@ void    ServerBlock::unsetDoubleDirective()
     hasIndex = false;
 }
 
-const std::map<int, std::string>& getValidStatus() {
+const std::map<int, std::string>& errorStatus() {
     static std::map<int, std::string> m;
     if (m.empty()) {
         m[200] = "OK";
@@ -268,32 +286,8 @@ bool    ServerBlock::checkServerBlock(ServerBlock& server)
         }
         if (currentDir.key == "listen")
         {
-            if (!isValidPort(currentDir))
+            if (!validateListen(currentDir))
                 return false;
-            std::string value = currentDir.value;
-            size_t sep = value.find(':');
-            std::string host = "0.0.0.0";
-            std::string portStr;
-            if (sep != std::string::npos) {
-                host = value.substr(0, sep);
-                portStr = value.substr(sep + 1);
-            } else {
-                portStr = value;
-            }
-            if (portStr.empty()) {
-                LOG_ERR("Erreur config: port invalide dans listen");
-                return false;
-            }
-            int port = std::atoi(portStr.c_str());
-            std::pair<std::string, int> entry = std::make_pair(host, port);
-            if (_listen.find(entry) != _listen.end()) {
-                std::cerr << "Erreur config: listen " << host << ":" << port << " dupliqué\n";
-            }
-            else {
-                _listen.insert(entry);
-            }
-            setPort(port);
-            setHost(host);
         }
         else if (currentDir.key == "root"){
             if (currentDir.value.empty())
@@ -366,8 +360,8 @@ bool    ServerBlock::checkServerBlock(ServerBlock& server)
             std::vector<std::string> errorPart = splitLine(currentDir.value, " \t");
             if (errorPart.size() >= 2) {
                 int code = std::atoi(errorPart[0].c_str());
-                std::map<int, std::string>::const_iterator it = getValidStatus().find(code);
-                if (it == getValidStatus().end()) {
+                std::map<int, std::string>::const_iterator it = errorStatus().find(code);
+                if (it == errorStatus().end()) {
                     LOG_ERR("Code d'erreur invalide");
                     return false;
                 }

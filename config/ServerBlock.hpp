@@ -42,7 +42,7 @@ class ServerBlock
         bool    checkServerBlock(ServerBlock& server);
         bool    checkLocationBlock(const LocationBlock& location);
 
-        bool    isValidPort(const Directive& directive);
+        bool    validateListen(const Directive& directive);
         bool    isValidHost(const Directive& directive);
         bool    isValidClientBodySize(const Directive& directive);
 
