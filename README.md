@@ -17,7 +17,7 @@ on les parse mais on :
 -> Quand un client fait une requête vers un chemin qui match un bloc location, alors s'il y a une directive (root, index, autoindex, allowed_methods, etc.) dans ce bloc location, elle écrase celle du bloc server mais s'il manque une directive dans location, alors le server doit fournir la valeur par défaut.
 -> à checker dans "Response::buildFromRequest()" je pense
 
-3. Body dans les POST   
+3. Body dans les POST - OK   
 Pour l’instant le body accepté et écho renvoyé
 mais on doit :
 - Pouvoir enregistrer un fichier (Content-Disposition: form-data).

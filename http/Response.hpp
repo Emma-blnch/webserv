@@ -8,6 +8,7 @@
 
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <cstdlib>
 #include <cstring>
@@ -43,6 +44,14 @@ class Response {
         void buildFromRequest(const Request& req, const ServerBlock& server);
         // void buildFromRequest(const Request& req);
         std::string returnResponse() const;
+
+        // utils pour méthode post
+        bool checkBodySize(const std::string& body, const ServerBlock& server, const LocationBlock* location);
+        bool checkContentLength(const std::string& body, const Request& req);
+        // content-type pour méthode post
+        void handleMultipart(const Request& req, const std::string& body, const std::string& contentType);
+        void handlePlainText(const Request& req, const std::string& body);
+        void handleUrlEncoded(const Request& req, const std::string& body);
 
         void loadErrorPageIfNeeded();
 
