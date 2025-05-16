@@ -13,7 +13,12 @@
 #include <cstdlib>
 #include <cstring>
 
-class ServerBlock;
+#include "Request.hpp"
+#include "utils.hpp"
+#include "../config/ServerBlock.hpp"
+#include "handleGet.hpp"
+#include "handlePost.hpp"
+
 class Request;
 class LocationBlock;
 
@@ -49,9 +54,9 @@ class Response {
         bool checkBodySize(const std::string& body, const ServerBlock& server, const LocationBlock* location);
         bool checkContentLength(const std::string& body, const Request& req);
         // content-type pour méthode post
-        void handleMultipart(const Request& req, const std::string& body, const std::string& contentType);
-        void handlePlainText(const Request& req, const std::string& body);
-        void handleUrlEncoded(const Request& req, const std::string& body);
+        void handleMultipart(const std::string& body, const std::string& contentType);
+        void handlePlainText(const std::string& body);
+        void handleUrlEncoded(const std::string& body);
 
         void loadErrorPageIfNeeded();
 

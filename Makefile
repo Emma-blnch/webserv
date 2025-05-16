@@ -9,7 +9,11 @@ SRC = main.cpp \
 	config/LocationBlock.cpp \
 	http/utils.cpp \
 	http/Response.cpp \
-	http/Request.cpp
+	http/Request.cpp \
+	http/handleGet.cpp \
+	http/handlePost.cpp \
+	http/handleDelete.cpp \
+	http/handleCgi.cpp
 
 OBJ = ${SRC:%.cpp=obj/%.o}
 

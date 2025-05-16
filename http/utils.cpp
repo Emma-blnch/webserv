@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include "../config/LocationBlock.hpp"
 #include <algorithm>
 
 const std::map<int, std::string>& getValidStatus() {
@@ -68,4 +69,16 @@ std::string normalizePath(const std::string& path) {
             cleanPath += "/";
     }
     return cleanPath;
+}
+
+bool isMethodAllowed(const LocationBlock* location, const std::string& method) {
+    if (!location) // pas de bloc location donc aucune restriction ?
+        return true;
+        
+    for (size_t i = 0; i < location->allowedMethods.size(); ++i) {
+        if (location->allowedMethods[i] == method) {
+            return true;
+        }
+    }
+    return false;
 }
