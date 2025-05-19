@@ -1,12 +1,14 @@
-# Check a faire sur parsing
-- variables static bool ne leak pas (sinon remplacer par un std::set
+# Push du 19/05
+- refacto de certaines fonctions dans partie http : découpage en sous fonctions pour plus de lisibilité et modularité
+- dans partie config : remplacement des std::cout en std::cerr ou LOG_ERR pour messages d'erreur (hétérogénéité)
+- dans partie config : création de 2 mini fonctions pour remplacer std::stol et std::stoi qui n'exsitent qu'a partir de c++11
+- dans partie http : handleCGI complétée pour prendre en compte toutes les variables importantes
+- main revu pour prendre en compte plusieurs serveurs (au lieu d'un seul avant)
 
 ---  
 
 # A faire 
 1. Routing / Matching des ServerBlocks   
-Actuellement on utilise servers[0] pour répondre -> implémenter la gestion des différents serveurs
-- Identifier le bon ServerBlock à partir du couple (host, port) + Host: header.
 
 2. Location Blocks (incomplet / partiel)   
 on les parse mais on :
