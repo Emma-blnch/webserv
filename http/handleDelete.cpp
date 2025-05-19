@@ -1,5 +1,13 @@
 #include "handleDelete.hpp"
 
+bool Response::checkFilePermissions(const std::string& file, int mode, int errorCode) {
+    if (access(file.c_str(), mode) != 0) {
+        setStatus(errorCode);
+        return false;
+    }
+    return true;
+}
+
 void Response::handleDELETE(const Request& req, const ServerBlock& server, const LocationBlock* location) { // Supprimer la ressource
     // Verifier si methode est allowed selon bloc Location du server
     if (!isMethodAllowed(location, "DELETE")) {
@@ -24,20 +32,11 @@ void Response::handleDELETE(const Request& req, const ServerBlock& server, const
         return;
     }
     // Vérifier que le fichier existe
-    if (access(fullPath.c_str(), F_OK) != 0) {
-        setStatus(404);
-        return;
-    }
+    if (!checkFilePermissions(fullPath, F_OK, 404)) return;
     // Vérifier que je peux modifier le dossier
-    if (access(dir.c_str(), W_OK) != 0) {
-        setStatus(403);
-        return;
-    }
+    if (!checkFilePermissions(dir, W_OK, 403)) return;
     // Vérifier que je peux modifier le fichier
-    if (access(fullPath.c_str(), W_OK) != 0) {
-        setStatus(403);
-        return;
-    }
+    if (!checkFilePermissions(fullPath, W_OK, 403)) return;
     // Essayer de supprimer
     if (remove(fullPath.c_str()) != 0) {
         setStatus(500);

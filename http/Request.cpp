@@ -21,8 +21,17 @@ void Request::parseRequestLine(const std::string& line) {
             if (_method != "GET" && _method != "POST" && _method != "DELETE")
                 throw std::runtime_error("Unsupported HTTP method: " + _method);
         }
-        else if (i == 1)
+        else if (i == 1) {
             _path = token;
+            // separation path et query string
+            size_t pos = _path.find('?');
+            if (pos != std::string::npos) {
+                _query = _path.substr(pos + 1);
+                _path = _path.substr(0, pos);
+            }
+            else
+                _query = "";
+        }
         _path = normalizePath(_path); // éviter accès à fichiers protégés
         start = end + 1;
         end = line.find(' ', start);
@@ -129,4 +138,8 @@ std::string Request::getHeader(const std::string& key) const {
 
 std::string Request::getBody() const {
     return _body;
+}
+
+std::string Request::getQuery() const {
+    return _query;
 }

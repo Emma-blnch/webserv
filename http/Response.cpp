@@ -70,7 +70,7 @@ void Response::buildFromRequest(const Request& req, const ServerBlock& server) {
     const LocationBlock* location = server.findMatchingLocation(req.getPath());
 
     if (path.find("/cgi-bin/") == 0) {
-        handleCGI(req, location);
+        handleCGI(req, location, server);
     }
     else if (req.getMethod() == "GET")
         handleGET(req, server, location);

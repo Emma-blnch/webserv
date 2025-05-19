@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <cstdlib>
 #include <cstring>
+#include <dirent.h>
 
 #include "Request.hpp"
 #include "utils.hpp"
@@ -47,7 +48,6 @@ class Response {
         void setErrorPages(const std::map<int, std::string>& pages);
 
         void buildFromRequest(const Request& req, const ServerBlock& server);
-        // void buildFromRequest(const Request& req);
         std::string returnResponse() const;
 
         // utils pour méthode post
@@ -60,7 +60,12 @@ class Response {
 
         void loadErrorPageIfNeeded();
 
-        void handleCGI(const Request& req, const LocationBlock* location);
+        void handleCGI(const Request& req, const LocationBlock* location, const ServerBlock& server);
+        // refacto fonctions
+        std::vector<std::string> buildCGIEnvp(const Request& req);
+        std::string readCGIOutput(int fd);
+        void handleGetDirectory(const std::string& dirPath, const std::string& urlPath, const ServerBlock& server, const LocationBlock* location);
+        bool checkFilePermissions(const std::string& file, int mode, int errorCode);
 };
 
 #endif

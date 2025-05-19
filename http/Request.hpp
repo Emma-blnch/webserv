@@ -14,6 +14,7 @@ class Request {
         std::string _version;
         std::map<std::string, std::string> _header;
         std::string _body;
+        std::string _query;
 
         void parseRequestLine(const std::string& line);
         void parseHeaderLine(const std::string& line);
@@ -30,6 +31,7 @@ class Request {
         std::string getVersion() const;
         std::string getHeader(const std::string& key) const;
         std::string getBody() const;
+        std::string getQuery() const;
 };
 
 #endif
