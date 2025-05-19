@@ -11,7 +11,7 @@
 #include "ParsingUtils.hpp"
 #include "LocationBlock.hpp"
 
-#define LOG_ERR(msg) std::cerr << "Erreur config\n" << msg << std::endl
+// #define LOG_ERR(msg) std::cerr << "Erreur config\n" << msg << std::endl
 
 // struct Listen
 // {

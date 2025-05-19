@@ -1,4 +1,5 @@
-#pragma once
+#ifndef LOCATIONBLOCK_HPP
+#define LOCATION_BLOCK_HPP
 
 #include <string>
 #include <vector>
@@ -11,6 +12,8 @@
 
 #include "ParsingUtils.hpp"
 #include "Directive.hpp"
+
+#define LOG_ERR(msg) std::cerr << "Erreur config\n" << msg << std::endl
 
 class ServerBlock;
 
@@ -31,3 +34,5 @@ class LocationBlock
 };
 
 bool fillLocationBlock(LocationBlock& loc);
+
+#endif

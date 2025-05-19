@@ -1,5 +1,5 @@
 #ifndef CONFIGFILE_HPP
- #define CONFIGFILE_HPP
+#define CONFIGFILE_HPP
 
 #include <string>
 #include <vector>

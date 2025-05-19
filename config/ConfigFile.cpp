@@ -54,7 +54,7 @@ bool    ConfigFile::extractDirective(std::string& line, Directive& dir)
     std::pair<std::string, std::string> directive = parseDirective(line);
     if (directive.first.empty())
     {
-        std::cout << "Erreur config: directive vide\n";
+        LOG_ERR("Directive vide");
         return false;
     }
     dir.key = directive.first;
@@ -76,7 +76,7 @@ bool    ConfigFile::extractLocationBlockContent(LocationBlock& location, std::if
         std::vector<std::string>    tokens = splitLine(line, " \t");
         if (isServerBlockStart(tokens)|| isLocationBlockStart(tokens))
         {
-            std::cout << "Erreur config: bloc trouvé dans un bloc location\n";
+            LOG_ERR("Bloc trouvé dans un bloc location");
             return false;
         }
         if (isDirective(line)){
@@ -93,11 +93,11 @@ bool    ConfigFile::extractLocationBlockContent(LocationBlock& location, std::if
         }
         else
         {
-            std::cout << "Erreur config: Un bloc location ne doit contenir que des directives\n";
+            LOG_ERR("Un bloc location ne doit contenir que des directives");
             return false;
         }
     }
-    std::cout << "Erreur config: bloc location ouvert\n";
+    LOG_ERR("Bloc location ouvert");
     return false;
 }
 
@@ -116,7 +116,7 @@ bool    ConfigFile::extractServerBlockContent(ServerBlock& server, std::ifstream
             return true;
         std::vector<std::string>    tokens = splitLine(line, " \t");
         if (isServerBlockStart(tokens)){
-            std::cout << "Erreur config: un bloc server ne peut en contenir un autre\n";
+            LOG_ERR("Un bloc server ne peut en contenir un autre");
             return false;
         }
         if (isLocationBlockStart(tokens)){
@@ -149,7 +149,7 @@ bool    ConfigFile::extractServerBlockContent(ServerBlock& server, std::ifstream
         }
         else
         {
-            std::cout << "Un bloc serveur ne doit contenir que des directives et des blocs location\n";
+            LOG_ERR("Un bloc serveur ne doit contenir que des directives et des blocs location");
             return false;
         }
     }
@@ -168,7 +168,7 @@ bool    ConfigFile::extractServerBlocks(std::ifstream& file)
             continue ;
         std::vector<std::string>    tokens = splitLine(line, " \t");
         if (!isServerBlockStart(tokens)){
-            std::cout << "Erreur config: n'écrire que dans les blocs server\n";
+            LOG_ERR("N'écrire que dans les blocs server");
             return false;
         }
         else
@@ -182,7 +182,7 @@ bool    ConfigFile::extractServerBlocks(std::ifstream& file)
     }
     if (_servers.empty())
     {
-        std::cout << "Erreur config: aucun serveur trouvé\n";
+        LOG_ERR("Aucun serveur trouvé");
         return false;
     }
     return true;
@@ -204,7 +204,7 @@ bool    ConfigFile::parseConfigFile(const std::string& filename)
 {
     std::ifstream file(filename.c_str());
     if (!file.is_open()){
-        std::cout << "Could not open "<< filename << "\n";
+        std::cerr << "Could not open "<< filename << "\n";
         return false;
     }
     _file = filename;

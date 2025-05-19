@@ -173,7 +173,7 @@ bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
     }
     if (!index && !autoIndex)
     {
-        std::cout << "No index in location block\n";
+        std::cerr << "No index in location block\n";
         return false;
     }
     return (root);
