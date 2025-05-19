@@ -79,3 +79,21 @@ std::set<std::string>    splitLineSet(std::string line, std::string delim)
     }
     return (result);
 }
+
+#include <sstream>
+
+// Remplace std::stoi(str) par :
+int asInt(const std::string& str) {
+    std::istringstream iss(str);
+    int n;
+    iss >> n;
+    return n;
+}
+
+// Remplace std::stol(str) par :
+long asLong(const std::string& str) {
+    std::istringstream iss(str);
+    long n;
+    iss >> n;
+    return n;
+}

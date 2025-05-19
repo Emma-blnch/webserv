@@ -1,5 +1,5 @@
 #ifndef LOCATIONBLOCK_HPP
-#define LOCATION_BLOCK_HPP
+#define LOCATIONBLOCK_HPP
 
 #include <string>
 #include <vector>

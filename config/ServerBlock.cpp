@@ -1,5 +1,6 @@
 #include "ServerBlock.hpp"
 #include <fcntl.h>
+#include <string>
 
 static bool hasListen = false;
 static bool hasClientMaxBodySize = false;
@@ -22,7 +23,7 @@ bool    ServerBlock::isValidClientBodySize(const Directive& directive)
         return false;
     if (i == size.length()) // que des chiffres, juste à vérifier l'overflow
     {
-        long    result = std::stol(size);
+        long    result = asLong(size);
         if (result < INT_MIN ||  result > INT_MAX)
         {
             LOG_ERR("Bodymaxsize < intmin ou > intmax");
@@ -73,7 +74,7 @@ bool    ServerBlock::validateListen(const Directive& directive)
                 return false;
             }
         }
-        long   result = std::stol(port);
+        long   result = asLong(port);
         if (result < INT_MIN || result > INT_MAX || result <= 0 || result > 65535)
         {
             std::cerr << "Le port " << port << " n'est pas valide\n";
@@ -98,7 +99,7 @@ bool    ServerBlock::validateListen(const Directive& directive)
             return false;
         i++;
     }
-    long    result = std::stol(directive.value);
+    long    result = asLong(directive.value);
     if (result < INT_MIN || result > INT_MAX || result <= 0 || result > 65535)
     {
         std::cerr << "Erreur config: le port " << directive.value << " n'est pas valide\n";
@@ -214,7 +215,7 @@ bool    ServerBlock::isValidHost(const Directive& directive)
                 return false;
             }
         }
-        int byteValue = std::stoi(bytes[i]);
+        int byteValue = asInt(bytes[i]);
         if (byteValue < 0 || byteValue > 255){
             std::cerr << "Hôte (IP) invalide: " << host << std::endl;   
             return false;

@@ -10,4 +10,7 @@ std::string                 removeCommentsAndEndSpaces(const std::string& line);
 std::vector<std::string>    splitLine(std::string line, std::string delim);
 std::set<std::string>    splitLineSet(std::string line, std::string delim);
 
+long asLong(const std::string& str);
+int asInt(const std::string& str);
+
 #endif

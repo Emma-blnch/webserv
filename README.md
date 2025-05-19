@@ -23,7 +23,7 @@ mais on doit :
 - Pouvoir enregistrer un fichier (Content-Disposition: form-data).
 - Utiliser multipart/form-data parsing (même simplifié).
 
-4. CGI exécutables (fonctionnels mais à améliorer)   
+4. CGI exécutables (fonctionnels mais à améliorer) - OK   
 Gestion CGI Python qui fonctionne
 on doit :
 - Supporter l’exécution d’un CGI pour une extension particulière (.py, .pl, etc.).
