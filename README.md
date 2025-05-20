@@ -8,17 +8,40 @@
 ---  
 
 # A faire 
-1. Routing / Matching des ServerBlocks   
+1. Normaliser la casse pour toutes les vérifs de directive   
+-> Pour éviter des bugs du type Index ≠ index, tout passer en minuscules (toLower() ou équivalent) avant la comparaison
+À faire : partout où compares un dir.key ou la valeur d’une directive (on, off, etc).  
 
 2. Location Blocks (incomplet / partiel)   
 on les parse mais on :
 - doit pouvoir redéfinir root, allowed_methods, index, cgi_path dans une location.
-- doit faire le matching le plus précis (longest match path).
 - doit gérer l’inheritance et la surcharge correcte des directives.
 -> Quand un client fait une requête vers un chemin qui match un bloc location, alors s'il y a une directive (root, index, autoindex, allowed_methods, etc.) dans ce bloc location, elle écrase celle du bloc server mais s'il manque une directive dans location, alors le server doit fournir la valeur par défaut.
 -> à checker dans "Response::buildFromRequest()" je pense
 
-3. Tests finaux   
+3. Tester la valeur d’index à la fin, une fois root garanti   
+-> déplacer "std::string fullPath = loc.root + "/" + loc.index[j];" à la fin de la fonction pour etre sur que root est défini avant
+
+4. Initialiser toutes les directives avec une valeur par défaut dans le constructeur de LocationBlock   
+-> évite les comportements indéfinis   
+root = ""
+autoindex = false
+allowedMethods.clear() ou allowedMethods.push_back("GET")
+index.clear()
+maxBodySize = 0
+
+5. Ajouter un check pour éviter duplication des directives dans location   
+un genre de "std::set<std::string> directivesSeen;
+for (...) {
+    if (!directivesSeen.insert(dir.key).second) {
+        std::cerr << "Erreur: directive " << dir.key << " dupliquée dans le bloc location\n";
+        return false;
+    }
+    // suite...
+}
+"
+
+8. Tests finaux   
 Egalement faire :
 - Des tests croisés avec curl, telnet, et navigateur.
 - Un test de stress : ab -n 1000 -c 100 http://127.0.0.1:8080/index.html
