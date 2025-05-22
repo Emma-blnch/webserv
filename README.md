@@ -8,21 +8,36 @@
 ---  
 
 # A faire 
-1. Normaliser la casse pour toutes les vérifs de directive   
+
+Je crois qu'il n'y a que la directive root qui est obligatoire dans un bloc server. On initialise 
+déjà host et port (donc listen pas obligatoire j'imagine).
+Aussi, le handleGet empêche la compilation à cause du changement sur index (on peut 
+avoir plusieurs index dans la directive, le getIndex renvoie donc un vector de string et pas une string)
+
+
+--- 
+
+1. [OK] (pour les keys seulement) - Normaliser la casse pour toutes les vérifs de directive   
 -> Pour éviter des bugs du type Index ≠ index, tout passer en minuscules (toLower() ou équivalent) avant la comparaison
 À faire : partout où compares un dir.key ou la valeur d’une directive (on, off, etc).  
 
-2. Location Blocks (incomplet / partiel)   
+
+2. [QUASI]Location Blocks (incomplet / partiel)   
 on les parse mais on :
 - doit pouvoir redéfinir root, allowed_methods, index, cgi_path dans une location.
 - doit gérer l’inheritance et la surcharge correcte des directives.
 -> Quand un client fait une requête vers un chemin qui match un bloc location, alors s'il y a une directive (root, index, autoindex, allowed_methods, etc.) dans ce bloc location, elle écrase celle du bloc server mais s'il manque une directive dans location, alors le server doit fournir la valeur par défaut.
--> à checker dans "Response::buildFromRequest()" je pense
 
-3. Tester la valeur d’index à la fin, une fois root garanti   
+-- [OK] SAUF POUR CELLES ABSENTES DANS LE BLOC SERVER (allowed_methods, autoindex...), à bien vérifier
+
+-> à checker dans "Response::buildFromRequest()" je pense 
+
+
+3. [OK] Tester la valeur d’index à la fin, une fois root garanti   
 -> déplacer "std::string fullPath = loc.root + "/" + loc.index[j];" à la fin de la fonction pour etre sur que root est défini avant
 
-4. Initialiser toutes les directives avec une valeur par défaut dans le constructeur de LocationBlock   
+
+4. [QUESTION**] - Initialiser toutes les directives avec une valeur par défaut dans le constructeur de LocationBlock   
 -> évite les comportements indéfinis   
 root = ""
 autoindex = false
@@ -30,7 +45,10 @@ allowedMethods.clear() ou allowedMethods.push_back("GET")
 index.clear()
 maxBodySize = 0
 
-5. Ajouter un check pour éviter duplication des directives dans location   
+** Pourquoi 0 sur maxBodySize ? (on initialise à 1M nos blocs server) Pourquoi clear() et pourquoi mettre la méthode GET 
+en particulier si allowed_methods n'est pas précisée ? 
+
+5. [OK] Ajouter un check pour éviter duplication des directives dans location   
 un genre de "std::set<std::string> directivesSeen;
 for (...) {
     if (!directivesSeen.insert(dir.key).second) {
