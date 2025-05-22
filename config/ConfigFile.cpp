@@ -40,6 +40,11 @@ std::pair<std::string, std::string> ConfigFile::parseDirective(const std::string
     if (tokens.empty())
         return result;
     result.first = tokens[0];
+    for (size_t i = 0; i < result.first.size(); ++i){
+        if (std::isalpha(result.first[i]) && std::isupper(result.first[i])){
+            result.first[i] = std::tolower(result.first[i]);
+        }
+    }
     if (tokens.size() > 1){
         result.second = tokens[1];
         for (size_t i = 2; i < tokens.size(); ++i){
@@ -208,6 +213,7 @@ bool    ConfigFile::parseConfigFile(const std::string& filename)
         return false;
     }
     _file = filename;
+
     if (!extractServerBlocks(file)){
         file.close();
         return false;
