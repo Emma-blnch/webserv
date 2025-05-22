@@ -177,7 +177,9 @@ const std::map<int, std::string>& errorStatus() {
 
 bool    ServerBlock::checkServerBlock(ServerBlock& server)
 {
-    std::set<std::string> seenDirectives;
+    std::set<std::string>       seenDirectives;
+    std::vector<std::string>           indexes;
+    bool    hasIndex = false;
 
     for (size_t i = 0; i < server.directives.size(); ++i)
     {
@@ -217,25 +219,8 @@ bool    ServerBlock::checkServerBlock(ServerBlock& server)
                 LOG_ERR("Config error: no index");
                 return false;
             }
-            // std::string path2 = _root + "/" + currentDir.value;
-            // if (access(path2.c_str(), F_OK) != 0) {
-            //     std::cerr << "Erreur config: cannot access index " << server.getIndex() << std::endl;
-            //     return false;
-            // }
-            std::vector<std::string> indexes = splitLine(currentDir.value, " \t");
-            bool    hasValidIndex = false;
-            for (size_t i = 0; i < indexes.size(); ++i){
-                std::string path2 = _root + "/" + indexes[i];
-                if (access(path2.c_str(), F_OK) == 0){
-                    hasValidIndex = true;
-                    break;
-                }
-            }
-            if (!hasValidIndex){
-                std::cerr << "Erreur config : cannot access any of indexes in server block\n";
-                return false;
-            }
-            setIndexes(indexes);
+            hasIndex = true;
+            indexes = splitLine(currentDir.value, " \t");
         }
         else if (currentDir.key == "client_max_body_size") 
         {
@@ -299,6 +284,21 @@ bool    ServerBlock::checkServerBlock(ServerBlock& server)
             std::cerr << "Erreur config: directive non autorisée: " << server.directives[i].key << std::endl;
             return false;
         }
+    }
+    if (hasIndex){
+        bool    hasValidIndex = false;
+        for (size_t i = 0; i < indexes.size(); ++i){
+            std::string path2 = _root + "/" + indexes[i];
+            if (access(path2.c_str(), F_OK) == 0){
+                hasValidIndex = true;
+                break;
+            }
+        }
+        if (!hasValidIndex){
+            std::cerr << "Erreur config : cannot access any of indexes in server block\n";
+            return false;
+        }
+        setIndexes(indexes);
     }
     for (size_t i = 0; i < server._locations.size(); ++i){
         _locations.push_back(server._locations[i]);

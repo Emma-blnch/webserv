@@ -84,12 +84,13 @@ bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
 bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
 {
     std::set<std::string>   seenDirectives;
+    bool    hasIndex = false;
 
     loc.root = server.getRoot();
     // loc.allowedMethods = server.getAllowedMethods();
+    // loc.autoindex = server.getAutoindex();
     loc.maxBodySize = server.getClientMaxBodySize();
     loc.index = server.getIndex();
-    // loc.autoindex = server.getAutoindex();
     for (size_t i = 0; i < loc.directives.size(); ++i) {
         const Directive& dir = loc.directives[i];
 
@@ -125,18 +126,7 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
                 LOG_ERR("index vide");
                 return false;
             }
-            bool hasValidIndex = false;
-            for (size_t i = 0; i < loc.index.size(); ++i) {
-                std::string fullPath = loc.root + "/" + loc.index[i];
-                if (access(fullPath.c_str(), F_OK) == 0) {
-                    hasValidIndex = true;
-                    break;
-                }
-            }
-            if (!hasValidIndex){
-                std::cerr << "Erreur config : cannot access any of indexes in location block\n";
-                return false;
-            }
+            hasIndex = true;
         }
         else if (dir.key == "autoindex")
         {
@@ -182,6 +172,20 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
                 return false;
             }
             loc.maxBodySize = static_cast<size_t>(size);
+        }
+    }
+    if (hasIndex || !loc.index.empty()){
+        bool hasValidIndex = false;
+        for (size_t i = 0; i < loc.index.size(); ++i) {
+            std::string fullPath = loc.root + "/" + loc.index[i];
+            if (access(fullPath.c_str(), F_OK) == 0) {
+                hasValidIndex = true;
+                break;
+            }
+        }
+        if (!hasValidIndex){
+            std::cerr << "Erreur config : cannot access any of indexes in location block\n";
+            return false;
         }
     }
     return true;
