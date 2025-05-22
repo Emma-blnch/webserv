@@ -180,6 +180,7 @@ bool    ServerBlock::checkServerBlock(ServerBlock& server)
     std::set<std::string>       seenDirectives;
     std::vector<std::string>           indexes;
     bool    hasIndex = false;
+    bool    hasRoot = false;
 
     for (size_t i = 0; i < server.directives.size(); ++i)
     {
@@ -201,6 +202,7 @@ bool    ServerBlock::checkServerBlock(ServerBlock& server)
                 LOG_ERR("No root");
                 return false;
             }
+            hasRoot = true;
             std::string path = currentDir.value;
             int fd = open(path.c_str(), O_DIRECTORY);
             if (fd < 0) {
@@ -308,6 +310,10 @@ bool    ServerBlock::checkServerBlock(ServerBlock& server)
             LOG_ERR("Bloc location invalide");
             return false;
         }
+    }
+    if (!hasRoot){
+        std::cerr << "NO ROOT IN SERVER\n";
+        return false;
     }
     return true;
 }
