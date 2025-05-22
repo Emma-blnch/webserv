@@ -88,7 +88,7 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
     loc.root = server.getRoot();
     // loc.allowedMethods = server.getAllowedMethods();
     loc.maxBodySize = server.getClientMaxBodySize();
-    // loc.index = server.getIndex();
+    loc.index = server.getIndex();
     // loc.autoindex = server.getAutoindex();
     for (size_t i = 0; i < loc.directives.size(); ++i) {
         const Directive& dir = loc.directives[i];
@@ -125,14 +125,17 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
                 LOG_ERR("index vide");
                 return false;
             }
-            for (size_t j = 0; j < loc.index.size(); ++j) {
-                std::string fullPath = loc.root + "/" + loc.index[j];
-                if (access(fullPath.c_str(), F_OK) == 0)
+            bool hasValidIndex = false;
+            for (size_t i = 0; i < loc.index.size(); ++i) {
+                std::string fullPath = loc.root + "/" + loc.index[i];
+                if (access(fullPath.c_str(), F_OK) == 0) {
+                    hasValidIndex = true;
                     break;
-                if (j == loc.index.size() - 1) {
-                    std::cerr << "Erreur config: aucun fichier index trouvé dans " << loc.root << "\n";
-                    return false;
                 }
+            }
+            if (!hasValidIndex){
+                std::cerr << "Erreur config : cannot access any of indexes in location block\n";
+                return false;
             }
         }
         else if (dir.key == "autoindex")
