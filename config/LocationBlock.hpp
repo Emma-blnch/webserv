@@ -20,6 +20,7 @@ class ServerBlock;
 class LocationBlock
 {
     public:
+        LocationBlock(): autoindex(false), maxBodySize(1000000){}
         std::vector<Directive>      directives;
         std::string                 path;
         std::string                 root;
