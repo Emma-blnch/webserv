@@ -2,12 +2,6 @@
 #include <fcntl.h>
 #include <string>
 
-static bool hasListen = false;
-static bool hasClientMaxBodySize = false;
-static bool hasServerName = false;
-static bool hasRoot = false;
-static bool hasIndex = false; 
-
 bool    ServerBlock::isValidClientBodySize(const Directive& directive)
 {
     if (directive.value.empty())
@@ -117,68 +111,6 @@ bool    ServerBlock::validateListen(const Directive& directive)
     return true;
 }
 
-bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
-{
-
-    // try to open location path
-    if (location.path.empty())
-    {
-        std::cerr << "Config error: invalid location path: " << location.path << std::endl;
-        return false; 
-    }
-    
-    // bool    hasAllowMethods = false;
-    bool    root = false;
-    bool    autoIndex = false;
-    bool    index = false;
-
-    for (size_t i = 0; i < location.directives.size(); ++i)
-    {
-        const   Directive& currentDir = location.directives[i];
-        if (currentDir.key == "index"){
-            index = true;
-        if (currentDir.value.empty()){
-            LOG_ERR("No index");
-            return false;
-            }
-        }
-        else if (currentDir.key == "autoindex"){
-            autoIndex = true;
-            if (currentDir.value.empty()){
-                LOG_ERR("No autoindex");
-                return false;
-            }
-        }
-        if (currentDir.key == "allow_methods")
-        {
-            if (currentDir.value.empty()){
-                LOG_ERR("Empty allow_methods");
-                return false;
-            }
-            std::vector<std::string>    methods  = splitLine(currentDir.value, " \t");
-            for (size_t j = 0; j < methods.size(); ++j){
-                if (methods[j] != "GET" && methods[j] != "POST" && methods[j] != "DELETE"){
-                    std::cerr << "Config error: method not allowed: " << methods[j] << std::endl;
-                    return false;
-                }
-            }       
-        }
-        else if (currentDir.key == "root"){
-            root = true;
-            if (currentDir.value.empty())
-            {
-                LOG_ERR("No root");
-                return false;
-            }
-        }
-    }
-    if (!index && !autoIndex)
-    {
-        std::cerr << "No index in location block\n";
-        return false;
-    }
-    return (root);
-}
 
 bool    ServerBlock::isValidHost(const Directive& directive)
 {
@@ -223,49 +155,6 @@ bool    ServerBlock::isValidHost(const Directive& directive)
     }
     return true;
 }
-bool    ServerBlock::isDoubleDirective(const Directive& directive)
-{
-    if (directive.key == "listen"){
-        if (hasListen){
-            return true;
-        }
-        hasListen = true;
-    }
-    else if (directive.key == "client_max_body_size") {
-        if (hasClientMaxBodySize) {
-            return true;
-        }
-        hasClientMaxBodySize = true;
-    }
-    else if (directive.key == "server_name") {
-        if (hasServerName) {
-            return true;
-        }
-        hasServerName = true;
-    }
-    else if (directive.key == "root") {
-        if (hasRoot) {
-            return true;
-        }
-        hasRoot = true;
-    }
-    else if (directive.key == "index") {
-        if (hasIndex) {
-            return true;
-        }
-        hasIndex = true;
-    }
-    return false;
-}
-
-void    ServerBlock::unsetDoubleDirective()
-{
-    hasListen = false;
-    hasClientMaxBodySize = false;
-    hasServerName = false;
-    hasRoot = false;
-    hasIndex = false;
-}
 
 const std::map<int, std::string>& errorStatus() {
     static std::map<int, std::string> m;
@@ -288,12 +177,15 @@ const std::map<int, std::string>& errorStatus() {
 
 bool    ServerBlock::checkServerBlock(ServerBlock& server)
 {
+    std::set<std::string> seenDirectives;
+
     for (size_t i = 0; i < server.directives.size(); ++i)
     {
         const Directive& currentDir = server.directives[i];
-        if (isDoubleDirective(currentDir))
+
+        if (seenDirectives.find(currentDir.key) != seenDirectives.end())
         {
-            std::cerr << "Erreur config: directive " << currentDir.key << " déjà présente\n";
+            std::cerr << "Erreur config: doublon directive " << currentDir.key << std::endl;
             return false;
         }
         if (currentDir.key == "listen")
@@ -399,11 +291,10 @@ bool    ServerBlock::checkServerBlock(ServerBlock& server)
         _locations.push_back(server._locations[i]);
         if (!checkLocationBlock(_locations.back()))
             return false;
-        if (!fillLocationBlock(_locations.back())) {
-            LOG_ERR("Remplissage du bloc location échoué");
+        if (!fillLocationBlock(_locations.back(), server)) {
+            LOG_ERR("Bloc location invalide");
             return false;
         }
     }
-    unsetDoubleDirective();
     return true;
 }

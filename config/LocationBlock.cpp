@@ -1,13 +1,107 @@
 #include "LocationBlock.hpp"
 #include "ServerBlock.hpp"
 
-bool fillLocationBlock(LocationBlock& loc) {
+// 1 - check que les directives ne soient pas vides (key sans value) et correctes (celles demandées dans le sujet)
+// 2 - fillLocationBlock : initialise les structures Location avec les valeurs données dans le bloc Location, 
+// ou avec celles du server si elles ne sont pas précisées (surcharge)
+
+bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
+{
+
+    // try to open location path
+    if (location.path.empty())
+    {
+        std::cerr << "Config error: invalid location path: " << location.path << std::endl;
+        return false; 
+    }
+
+    for (size_t i = 0; i < location.directives.size(); ++i)
+    {
+        const   Directive& currentDir = location.directives[i];
+        if (currentDir.key == "index"){
+            if (currentDir.value.empty()){
+                LOG_ERR("No index");
+                return false;
+            }
+        }
+        else if (currentDir.key == "autoindex"){
+            if (currentDir.value.empty()){
+                LOG_ERR("No autoindex");
+                return false;
+            }
+        }
+        if (currentDir.key == "allow_methods")
+        {
+            if (currentDir.value.empty()){
+                LOG_ERR("Empty allow_methods");
+                return false;
+            }
+            std::vector<std::string>    methods  = splitLine(currentDir.value, " \t");
+            for (size_t j = 0; j < methods.size(); ++j){
+                if (methods[j] != "GET" && methods[j] != "POST" && methods[j] != "DELETE"){
+                    std::cerr << "Config error: method not allowed: " << methods[j] << std::endl;
+                    return false;
+                }
+            }       
+        }
+        else if (currentDir.key == "root"){
+            if (currentDir.value.empty())
+            {
+                LOG_ERR("No root");
+                return false;
+            }
+        }
+        else if (currentDir.key == "client_max_body_size"){
+            if (currentDir.value.empty())
+            {
+                LOG_ERR("No client_max_body_size");
+                return false;
+            }
+        }
+        else if (currentDir.key == "cgi_path"){
+            if (currentDir.value.empty())
+            {
+                LOG_ERR("No cgi_path");
+                return false;
+            }
+        }
+        else if (currentDir.key == "upload_dir"){
+            if (currentDir.value.empty())
+            {
+                LOG_ERR("No upload_dir");
+                return false;
+            }
+        }
+        else {
+            std::cerr << "Erreur config: directive inconnue dans location : " << currentDir.key << "\n";
+            return false;
+        }
+    }
+    return true;
+}
+
+
+bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
+{
+    std::set<std::string>   seenDirectives;
+
+    loc.root = server.getRoot();
+    // loc.allowedMethods = server.getAllowedMethods();
+    loc.maxBodySize = server.getClientMaxBodySize();
+    // loc.index = server.getIndex();
+    // loc.autoindex = server.getAutoindex();
     for (size_t i = 0; i < loc.directives.size(); ++i) {
         const Directive& dir = loc.directives[i];
+
+        if (seenDirectives.find(dir.key) != seenDirectives.end()){
+            std::cerr << "Erreur config: doublon directive " << dir.key << std::endl;
+            return false;
+        }
+        seenDirectives.insert(dir.key);
         if (dir.key == "allow_methods") {
             loc.allowedMethods = splitLine(dir.value, " \t");
             if (loc.allowedMethods.empty()) {
-                LOG_ERR("Allow_methods vide");
+                LOG_ERR("allow_methods vide");
                 return false;
             }
             for (size_t j = 0; j < loc.allowedMethods.size(); ++j) {
@@ -28,7 +122,7 @@ bool fillLocationBlock(LocationBlock& loc) {
         else if (dir.key == "index") {
             loc.index = splitLine(dir.value, " \t");
             if (loc.index.empty()) {
-                LOG_ERR("Index vide");
+                LOG_ERR("index vide");
                 return false;
             }
             for (size_t j = 0; j < loc.index.size(); ++j) {
@@ -41,8 +135,16 @@ bool fillLocationBlock(LocationBlock& loc) {
                 }
             }
         }
-        else if (dir.key == "autoindex") {
-            loc.autoindex = (dir.value == "on");
+        else if (dir.key == "autoindex")
+        {
+            if (dir.value == "on")
+                loc.autoindex = true;
+            else if (dir.value == "off")
+                loc.autoindex = false;
+            else {
+                std::cerr << "Wrong autodindex: must be on or off\n";
+                return false;
+            }
         }
         else if (dir.key == "upload_dir") {
             loc.uploadDir = dir.value;
@@ -61,7 +163,7 @@ bool fillLocationBlock(LocationBlock& loc) {
         else if (dir.key == "client_max_body_size") {
             std::string sizeStr = dir.value;
             if (sizeStr.empty()) {
-                LOG_ERR("Client_max_body_size vide dans location");
+                LOG_ERR("client_max_body_size vide dans location");
                 return false;
             }
 
@@ -72,17 +174,11 @@ bool fillLocationBlock(LocationBlock& loc) {
                 else if (unit == 'm') size *= 1024 * 1024;
                 else if (unit == 'g') size *= 1024 * 1024 * 1024;
             }
-
             if (size <= 0) {
                 LOG_ERR("Taille invalide pour client_max_body_size dans location");
                 return false;
             }
-
             loc.maxBodySize = static_cast<size_t>(size);
-        }
-        else {
-            std::cerr << "Erreur config: directive inconnue dans location : " << dir.key << "\n";
-            return false;
         }
     }
     return true;

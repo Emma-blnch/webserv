@@ -46,9 +46,6 @@ class ServerBlock
         bool    isValidHost(const Directive& directive);
         bool    isValidClientBodySize(const Directive& directive);
 
-        bool    isDoubleDirective(const Directive& directive);
-        void    unsetDoubleDirective();
-
         // Setters
         void setHost(const std::string& host) { _host = host; }
         void setPort(int port) { _port = port; }

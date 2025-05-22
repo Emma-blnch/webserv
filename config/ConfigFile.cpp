@@ -57,7 +57,7 @@ std::pair<std::string, std::string> ConfigFile::parseDirective(const std::string
 bool    ConfigFile::extractDirective(std::string& line, Directive& dir)
 {
     std::pair<std::string, std::string> directive = parseDirective(line);
-    if (directive.first.empty())
+    if (directive.first.empty() || directive.second.empty())
     {
         LOG_ERR("Directive vide");
         return false;
@@ -85,7 +85,6 @@ bool    ConfigFile::extractLocationBlockContent(LocationBlock& location, std::if
             return false;
         }
         if (isDirective(line)){
-            // std::cout << line << "\n";
             Directive directive;
             if (!extractDirective(line, directive))
                 return false;
