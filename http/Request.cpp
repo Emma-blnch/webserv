@@ -54,12 +54,19 @@ void Request::parseRequestLine(const std::string& line) {
 }
 
 void Request::parseHeaderLine(const std::string& line) {
-    size_t colon = line.find(": ");
+    size_t colon = line.find(":");
 
     if (colon == std::string::npos)
         throw std::runtime_error("Malformed header line: missing colon");
     std::string key = line.substr(0, colon);
-    std::string value = line.substr(colon + 2);
+    std::string value;
+    std::string space = line.substr(colon + 1);
+    // Trim début de value (espace/tabs)
+    size_t firstNonSpace = space.find_first_not_of(" \t");
+    if (firstNonSpace != std::string::npos)
+        value = space.substr(firstNonSpace);
+    else
+        value = line.substr(colon + 1);
     key = toLower(key);
     _header[key] = value;
 }

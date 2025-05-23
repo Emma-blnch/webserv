@@ -64,3 +64,33 @@ Egalement faire :
 - Des tests croisés avec curl, telnet, et navigateur.
 - Un test de stress : ab -n 1000 -c 100 http://127.0.0.1:8080/index.html
 - Check leaks (valgrind)
+
+# -----------------------------------------------
+idées de tests :   
+   
+# 1. Test GET sur /
+curl -v http://127.0.0.1:8080/
+
+# 2. Test POST avec un petit body
+curl -v -d "toto=data" http://127.0.0.1:8080/upload/
+
+# 3. Test POST trop gros (devrait faire 413)
+dd if=/dev/zero bs=12k count=1 | curl -v --data-binary @- http://127.0.0.1:8080/upload/
+
+# 4. Test DELETE sur /delete/ (créer un fichier à la main avant)
+touch www/delete/file.txt
+curl -X DELETE -v http://127.0.0.1:8080/delete/file.txt
+
+# 5. Test méthode non autorisée
+curl -v PUT -v http://127.0.0.1:8080/
+
+# 6. Test sur location avec index absent (devrait renvoyer 403 ou 404)
+curl -v http://127.0.0.1:8080/foo/
+
+# 7. Test HTTP malformé (telnet)
+telnet 127.0.0.1 8080
+GET / HTTP/1.1
+Host: test
+User-Agent: bidule
+(break avec Ctrl+D ou Ctrl+])
+

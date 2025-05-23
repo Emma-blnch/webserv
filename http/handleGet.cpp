@@ -48,9 +48,9 @@ void Response::handleGetDirectory(const std::string& dirPath, const std::string&
     // si index dans bloc location
     if (location && !location->index.empty())
         indexList = location->index;
-    // sinon je prends idnex du bloc server
+    // sinon je prends index du bloc server
     else if (!server.getIndex().empty())
-        indexList.push_back(server.getIndex());
+        indexList.insert(indexList.end(), server.getIndex().begin(), server.getIndex().end());
     // sinon je met mon fichier de base
     else
         indexList.push_back("index.html");
