@@ -48,31 +48,7 @@ int main(int argc, char **argv) {
         // server actuel
         const ServerBlock& server = servers[i];
         std::string host = server.getHost();
-        int port = server.getPort();
-        // creation socker server pour ce server
-        int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-        if (serverSocket < 0) {
-            std::cerr << "Socket creation failed for " << host << ":" << port << std::endl;
-            return 1;
-        }
-        // configurer son adresse
-        sockaddr_in serverAddress;
-        serverAddress.sin_family = AF_INET;
-        serverAddress.sin_port = htons(port);
-        std::cout << "port " << server.getPort() << std::endl;
-        serverAddress.sin_addr.s_addr = inet_addr(host.c_str());
-        std::cout << "host " << server.getHost() << std::endl;
-        // bind et listen
-        if (bind(serverSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0) {
-            std::cerr << "Bind failed for " << host << ":" << port << std::endl;
-            close(serverSocket);
-            continue;
-        }
-        if (listen(serverSocket, 5) < 0) {
-            std::cerr << "Listen failed for " << host << ":" << port << std::endl;
-            close(serverSocket);
-            continue;
-        }
+        int port = server.getPort();  
         // check si deja socket ouverte pour ce host:port
         bool found = false;
         for (size_t j = 0; j < sockets.size(); ++j) {
@@ -82,7 +58,31 @@ int main(int argc, char **argv) {
                 break;
             }
         }
-        if (!found) {
+        if (!found) { 
+            // creation socker server pour ce server   
+            int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+            if (serverSocket < 0) {
+                std::cerr << "Socket creation failed for " << host << ":" << port << std::endl;
+                return 1;
+            }
+            // configurer son adresse
+            sockaddr_in serverAddress;
+            serverAddress.sin_family = AF_INET;
+            serverAddress.sin_port = htons(port);
+            std::cout << "port " << server.getPort() << std::endl;
+            serverAddress.sin_addr.s_addr = inet_addr(host.c_str());
+            std::cout << "host " << server.getHost() << std::endl;  
+            // bind et listen
+            if (bind(serverSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0) {
+                std::cerr << "Bind failed for " << host << ":" << port << std::endl;
+                close(serverSocket);
+                continue;
+            }
+            if (listen(serverSocket, 5) < 0) {
+                std::cerr << "Listen failed for " << host << ":" << port << std::endl;
+                close(serverSocket);
+                continue;
+            }
             SocketData data;
             data.fd = serverSocket;
             data.host = host;
@@ -112,7 +112,6 @@ int main(int argc, char **argv) {
             std::cerr << "Poll error\n";
             break;
         }
-
         // check qui a causé l'activité
         for (size_t i = 0; i < fds.size(); ++i) {
             bool isServerFd = false;
