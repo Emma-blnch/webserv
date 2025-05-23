@@ -46,11 +46,19 @@ std::string generateAutoIndex(const std::string& dirPath, const std::string& url
 void Response::handleGetDirectory(const std::string& dirPath, const std::string& urlPath, const ServerBlock& server, const LocationBlock* location) {
     std::vector<std::string> indexList;
     // si index dans bloc location
+    // for (size_t i = 0; i < location->index.size(); ++i){
+    //     std::cout << location->index[i] << std::endl;
+    // }
     if (location && !location->index.empty())
         indexList = location->index;
     // sinon je prends index du bloc server
     else if (!server.getIndex().empty())
+    {
         indexList.insert(indexList.end(), server.getIndex().begin(), server.getIndex().end());
+        // for (size_t i = 0; i < indexList.size(); ++i){
+        //     std::cout << indexList[i] << std::endl;
+        // }
+    }
     // sinon je met mon fichier de base
     else
         indexList.push_back("index.html");

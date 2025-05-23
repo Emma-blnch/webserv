@@ -175,16 +175,16 @@ const std::map<int, std::string>& errorStatus() {
     return m;
 }
 
-bool    ServerBlock::checkServerBlock(ServerBlock& server)
+bool    ServerBlock::checkServerBlock()
 {
     std::set<std::string>       seenDirectives;
     std::vector<std::string>           indexes;
     bool    hasIndex = false;
     bool    hasRoot = false;
 
-    for (size_t i = 0; i < server.directives.size(); ++i)
+    for (size_t i = 0; i < directives.size(); ++i)
     {
-        const Directive& currentDir = server.directives[i];
+        const Directive& currentDir = directives[i];
 
         if (seenDirectives.find(currentDir.key) != seenDirectives.end())
         {
@@ -283,7 +283,7 @@ bool    ServerBlock::checkServerBlock(ServerBlock& server)
         }
         else
         {
-            std::cerr << "Erreur config: directive non autorisée: " << server.directives[i].key << std::endl;
+            std::cerr << "Erreur config: directive non autorisée: " << directives[i].key << std::endl;
             return false;
         }
     }
@@ -302,11 +302,10 @@ bool    ServerBlock::checkServerBlock(ServerBlock& server)
         }
         setIndexes(indexes);
     }
-    for (size_t i = 0; i < server._locations.size(); ++i){
-        _locations.push_back(server._locations[i]);
+    for (size_t i = 0; i < _locations.size(); ++i){
         if (!checkLocationBlock(_locations.back()))
             return false;
-        if (!fillLocationBlock(_locations.back(), server)) {
+        if (!fillLocationBlock(_locations.back(), *this)) {
             LOG_ERR("Bloc location invalide");
             return false;
         }

@@ -39,7 +39,7 @@ class ServerBlock
         const std::vector<LocationBlock>& getLocations() const { return _locations; }
         const std::set<std::pair<std::string, int> >& getListen() const { return _listen; }
 
-        bool    checkServerBlock(ServerBlock& server);
+        bool    checkServerBlock();
         bool    checkLocationBlock(const LocationBlock& location);
 
         bool    validateListen(const Directive& directive);

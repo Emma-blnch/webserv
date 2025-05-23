@@ -40,6 +40,7 @@ int main(int argc, char **argv) {
         std::cerr << "Aucun bloc serveur valide.\n";
         return 1;
     }
+
     // stocker tous les socket ouverts
     std::vector<SocketData> sockets;
     // boucle pour recup tous les host port de chaque server

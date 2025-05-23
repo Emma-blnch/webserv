@@ -195,10 +195,10 @@ bool    ConfigFile::extractServerBlocks(std::ifstream& file)
 bool    ConfigFile::checkServers()
 {
     for (size_t i = 0; i < _servers.size(); ++i){
-        // ServerBlock s; // sert juste à appeler la méthode
-        // if (!s.checkServerBlock(_servers[i]))
-        if (!_servers[i].checkServerBlock(_servers[i]))
+        if (!_servers[i].checkServerBlock()){
+            std::cerr << "Error in server block n° " <<  i << std::endl;
             return false;
+        }
     }
     return true;
 }
