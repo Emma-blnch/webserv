@@ -114,4 +114,5 @@ void Response::handlePOST(const Request& req, const ServerBlock& server, const L
         setStatus(415); // Unsupported Media Type
         setBody("Unsupported Content-Type in POST");
     }
+    std::cout << "Méthode POST réussie" << std::endl;
 }

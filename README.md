@@ -1,63 +1,27 @@
-# Push du 19/05
-- refacto de certaines fonctions dans partie http : découpage en sous fonctions pour plus de lisibilité et modularité
-- dans partie config : remplacement des std::cout en std::cerr ou LOG_ERR pour messages d'erreur (hétérogénéité)
-- dans partie config : création de 2 mini fonctions pour remplacer std::stol et std::stoi qui n'exsitent qu'a partir de c++11
-- dans partie http : handleCGI complétée pour prendre en compte toutes les variables importantes
-- main revu pour prendre en compte plusieurs serveurs (au lieu d'un seul avant)
+# Autres modifs faites
+- dans fillLocationBlock modif de cette condition "if (hasIndex || !loc.index.empty())" en "(hasIndex)" car condition TOUJOURS vraie (-> hérite de l'index du server dans tous les cas donc il check l'index server dans le dossier location donc pas bon)
 
----  
 
+---   
 # A faire 
+1. dans void Request::parseRequestLine(const std::string& line)
+renvoyer erreur 405 au lieu de 400 quand mauvaise méthode
 
-Je crois qu'il n'y a que la directive root qui est obligatoire dans un bloc server. On initialise 
-déjà host et port (donc listen pas obligatoire j'imagine).
-Aussi, le handleGet empêche la compilation à cause du changement sur index (on peut 
-avoir plusieurs index dans la directive, le getIndex renvoie donc un vector de string et pas une string)
+2. [OK] location "./" ne fonctionne pas
+-> dans le fichier de config il faut mettre "location /" mais "root ./" pour que ça fonctionne sinon code était bon
 
+3. Refacto fonctions pour lisibilité
+-> découper en sous fonctions
+-> s'assurer que chaque fichier a son hpp
+-> s'assurer que les fonctions sont déclarées dans .hpp mais écrites dans .cpp
 
---- 
+4. [OK] Initialiser dans le constructeur de LocationBlock   
+allowedMethods.push_back("GET") et POST
 
-1. [OK] (pour les keys seulement) - Normaliser la casse pour toutes les vérifs de directive   
--> Pour éviter des bugs du type Index ≠ index, tout passer en minuscules (toLower() ou équivalent) avant la comparaison
-À faire : partout où compares un dir.key ou la valeur d’une directive (on, off, etc).  
+5. Revoir page accueil HTML pour pouvoir tout tester dessus
 
-
-2. [QUASI]Location Blocks (incomplet / partiel)   
-on les parse mais on :
-- doit pouvoir redéfinir root, allowed_methods, index, cgi_path dans une location.
-- doit gérer l’inheritance et la surcharge correcte des directives.
--> Quand un client fait une requête vers un chemin qui match un bloc location, alors s'il y a une directive (root, index, autoindex, allowed_methods, etc.) dans ce bloc location, elle écrase celle du bloc server mais s'il manque une directive dans location, alors le server doit fournir la valeur par défaut.
-
--- [OK] SAUF POUR CELLES ABSENTES DANS LE BLOC SERVER (allowed_methods, autoindex...), à bien vérifier
-
--> à checker dans "Response::buildFromRequest()" je pense 
-
-
-3. [OK] Tester la valeur d’index à la fin, une fois root garanti   
--> déplacer "std::string fullPath = loc.root + "/" + loc.index[j];" à la fin de la fonction pour etre sur que root est défini avant
-
-
-4. [QUESTION**] - Initialiser toutes les directives avec une valeur par défaut dans le constructeur de LocationBlock   
--> évite les comportements indéfinis   
-root = ""
-autoindex = false
-allowedMethods.clear() ou allowedMethods.push_back("GET")
-index.clear()
-maxBodySize = 0
-
-** Pourquoi 0 sur maxBodySize ? (on initialise à 1M nos blocs server) Pourquoi clear() et pourquoi mettre la méthode GET 
-en particulier si allowed_methods n'est pas précisée ? 
-
-5. [OK] Ajouter un check pour éviter duplication des directives dans location   
-un genre de "std::set<std::string> directivesSeen;
-for (...) {
-    if (!directivesSeen.insert(dir.key).second) {
-        std::cerr << "Erreur: directive " << dir.key << " dupliquée dans le bloc location\n";
-        return false;
-    }
-    // suite...
-}
-"
+6. [OK] Rajouter message log quand une méthode a réussit
+-> ok pour GET POST et DELETE
 
 8. Tests finaux   
 Egalement faire :

@@ -20,7 +20,7 @@ struct SocketData {
     int fd;
     std::string host;
     int port;
-    std::vector<const ServerBlock*> serverBlocks; // Tous les ServerBlocks pour ce host:port
+    std::vector<const ServerBlock*> serverBlocks;
 };
 
 int main(int argc, char **argv) {
@@ -28,28 +28,21 @@ int main(int argc, char **argv) {
         std::cerr << "Usage: ./webserv [CONFIG FILE].conf" << std::endl;
         return 1;
     }
-    // parser fichier de config
     ConfigFile config;
     if (!config.parseConfigFile(argv[1])) {
         std::cerr << "Erreur parsing config.\n";
         return 1;
     }
-    // recuperer tous les bloc server
     std::vector<ServerBlock> servers = config.getServers();
     if (servers.empty()) {
         std::cerr << "Aucun bloc serveur valide.\n";
         return 1;
     }
-
-    // stocker tous les socket ouverts
     std::vector<SocketData> sockets;
-    // boucle pour recup tous les host port de chaque server
     for (size_t i = 0; i < servers.size(); ++i) {
-        // server actuel
         const ServerBlock& server = servers[i];
         std::string host = server.getHost();
-        int port = server.getPort();  
-        // check si deja socket ouverte pour ce host:port
+        int port = server.getPort();
         bool found = false;
         for (size_t j = 0; j < sockets.size(); ++j) {
             if (sockets[j].host == host && sockets[j].port == port) {
@@ -58,21 +51,18 @@ int main(int argc, char **argv) {
                 break;
             }
         }
-        if (!found) { 
-            // creation socker server pour ce server   
+        if (!found) {
             int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
             if (serverSocket < 0) {
                 std::cerr << "Socket creation failed for " << host << ":" << port << std::endl;
                 return 1;
             }
-            // configurer son adresse
             sockaddr_in serverAddress;
             serverAddress.sin_family = AF_INET;
             serverAddress.sin_port = htons(port);
-            std::cout << "port " << server.getPort() << std::endl;
             serverAddress.sin_addr.s_addr = inet_addr(host.c_str());
-            std::cout << "host " << server.getHost() << std::endl;  
-            // bind et listen
+            std::cout << "port " << port << std::endl;
+            std::cout << "host " << host << std::endl;
             if (bind(serverSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0) {
                 std::cerr << "Bind failed for " << host << ":" << port << std::endl;
                 close(serverSocket);
@@ -91,20 +81,18 @@ int main(int argc, char **argv) {
             sockets.push_back(data);
         }
     }
-    // préparer poll avec socket serveur
     std::vector<struct pollfd> fds;
-    // chaque fd dans fds est un socket server avec host:port
     for (size_t i = 0; i < sockets.size(); ++i) {
         struct pollfd serverFd;
         serverFd.fd = sockets[i].fd;
-        serverFd.events = POLLIN; // = "préviens moi quand il ya des connexions"
+        serverFd.events = POLLIN;
         fds.push_back(serverFd);
     }
-
-    // faire la correspondance clientSocket -> index socket serveur utiliser
     std::map<int, size_t> clientSocketToServer;
-    
+    std::map<int, std::string> clientBuffers; // Ajout : buffer par client
+
     char buffer[BUFFER_SIZE + 1];
+    const size_t ABSOLUTE_MAX_REQUEST_SIZE = 20 * 1024 * 1024; // Limite "hard" anti-trolls : 20 Mo
 
     while (true) {
         int pollCount = poll(&fds[0], fds.size(), -1);
@@ -112,11 +100,9 @@ int main(int argc, char **argv) {
             std::cerr << "Poll error\n";
             break;
         }
-        // check qui a causé l'activité
         for (size_t i = 0; i < fds.size(); ++i) {
             bool isServerFd = false;
             size_t serverIndex = 0;
-            // si c serverSocket alors nouvelle connexion
             for (; serverIndex < sockets.size(); ++serverIndex) {
                 if (fds[i].fd == sockets[serverIndex].fd && (fds[i].revents & POLLIN)) {
                     isServerFd = true;
@@ -134,7 +120,6 @@ int main(int argc, char **argv) {
                 }
                 continue;
             }
-            // si c un client existant je lis sa requête
             if (fds[i].revents & POLLIN) {
                 int clientFd = fds[i].fd;
                 int bytesRead = recv(clientFd, buffer, BUFFER_SIZE, 0);
@@ -142,19 +127,36 @@ int main(int argc, char **argv) {
                     std::cout << "Client disconnected\n";
                     close(clientFd);
                     fds.erase(fds.begin() + i);
+                    clientBuffers.erase(clientFd);
+                    clientSocketToServer.erase(clientFd);
                     --i;
                     continue;
                 }
                 buffer[bytesRead] = '\0';
-
+                clientBuffers[clientFd].append(buffer, bytesRead);
+                // Anti flood : hard limit absolue sur la requête
+                if (clientBuffers[clientFd].size() > ABSOLUTE_MAX_REQUEST_SIZE) {
+                    const char* errorResponse =
+                        "HTTP/1.1 413 Payload Too Large\r\n"
+                        "Content-Type: text/plain\r\n"
+                        "Content-Length: 22\r\n"
+                        "\r\n"
+                        "413 Payload Too Large";
+                    send(clientFd, errorResponse, strlen(errorResponse), 0);
+                    close(clientFd);
+                    fds.erase(fds.begin() + i);
+                    clientBuffers.erase(clientFd);
+                    clientSocketToServer.erase(clientFd);
+                    --i;
+                    continue;
+                }
                 try {
-                    // trouver a quel socket correspond client
                     size_t socketIndex = clientSocketToServer[clientFd];
                     const std::vector<const ServerBlock*>& serverBlocks = sockets[socketIndex].serverBlocks;
-                    // parse request http
+
                     Request req;
-                    req.parseRawRequest(buffer);
-                    // choix du bon serverBlock via Host header
+                    req.parseRawRequest(clientBuffers[clientFd]);
+
                     std::string hostHeader = req.getHeader("host");
                     const ServerBlock* chosenServer = NULL;
                     for (size_t s = 0; s < serverBlocks.size(); ++s) {
@@ -170,24 +172,49 @@ int main(int argc, char **argv) {
                     res.setErrorPages(chosenServer->getErrorPages());
                     res.buildFromRequest(req, *chosenServer);
                     std::string responseStr = res.returnResponse();
-            
                     send(clientFd, responseStr.c_str(), responseStr.size(), 0);
-                } catch (const std::exception& e) {
-                    std::cerr << "Erreur : " << e.what() << std::endl;
-            
-                    // Envoi réponse 400
-                    const char* errorResponse =
-                        "HTTP/1.1 400 Bad Request\r\n"
-                        "Content-Type: text/plain\r\n"
-                        "Content-Length: 11\r\n"
-                        "\r\n"
-                        "Bad Request";
-                    send(clientFd, errorResponse, strlen(errorResponse), 0);
+
+                    close(clientFd);
+                    fds.erase(fds.begin() + i);
+                    clientBuffers.erase(clientFd);
+                    clientSocketToServer.erase(clientFd);
+                    --i;
+                } catch (const std::runtime_error& e) {
+                    std::string errStr = e.what();
+                    if (errStr.find("Incomplete request body") != std::string::npos) {
+                        continue;
+                    }
+                    else if (errStr.find("Payload Too Large") != std::string::npos) {
+                        const char* errorResponse =
+                            "HTTP/1.1 413 Payload Too Large\r\n"
+                            "Content-Type: text/plain\r\n"
+                            "Content-Length: 22\r\n"
+                            "\r\n"
+                            "413 Payload Too Large";
+                        send(clientFd, errorResponse, strlen(errorResponse), 0);
+                        close(clientFd);
+                        fds.erase(fds.begin() + i);
+                        clientBuffers.erase(clientFd);
+                        clientSocketToServer.erase(clientFd);
+                        --i;
+                        continue;
+                    }
+                    else {
+                        const char* errorResponse =
+                            "HTTP/1.1 400 Bad Request\r\n"
+                            "Content-Type: text/plain\r\n"
+                            "Content-Length: 11\r\n"
+                            "\r\n"
+                            "Bad Request";
+                        send(clientFd, errorResponse, strlen(errorResponse), 0);
+                        close(clientFd);
+                        fds.erase(fds.begin() + i);
+                        clientBuffers.erase(clientFd);
+                        clientSocketToServer.erase(clientFd);
+                        --i;
+                        continue;
+                    }
                 }
-                close(clientFd);
-                fds.erase(fds.begin() + i);
-                clientSocketToServer.erase(clientFd);
-                --i;
             }
         }
     }
@@ -195,6 +222,7 @@ int main(int argc, char **argv) {
         close(sockets[i].fd);
     return 0;
 }
+
 
 // un seul server:
 

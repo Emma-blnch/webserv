@@ -57,7 +57,6 @@ class ServerBlock
         void addErrorPage(int code, const std::string& path) { _errorPages[code] = path; }
         void addLocation(const LocationBlock& loc) { _locations.push_back(loc); }
 
-
         // trouver le bloc Location selon le chemin demander (a utiliser dans class Response)
         const LocationBlock* findMatchingLocation(const std::string& requestPath) const {
             for (size_t i = 0; i < _locations.size(); ++i) {

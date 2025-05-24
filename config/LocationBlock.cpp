@@ -7,7 +7,6 @@
 
 bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
 {
-
     // try to open location path
     if (location.path.empty())
     {
@@ -30,7 +29,7 @@ bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
                 return false;
             }
         }
-        if (currentDir.key == "allow_methods")
+        else if (currentDir.key == "allow_methods")
         {
             if (currentDir.value.empty()){
                 LOG_ERR("Empty allow_methods");
@@ -174,7 +173,7 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
             loc.maxBodySize = static_cast<size_t>(size);
         }
     }
-    if (hasIndex || !loc.index.empty()){
+    if (hasIndex){
         bool hasValidIndex = false;
         for (size_t i = 0; i < loc.index.size(); ++i) {
             std::string fullPath = loc.root + "/" + loc.index[i];

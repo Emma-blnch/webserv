@@ -20,7 +20,7 @@ class ServerBlock;
 class LocationBlock
 {
     public:
-        LocationBlock(): autoindex(false), maxBodySize(1000000){}
+        LocationBlock(): autoindex(false), maxBodySize(1000000) { allowedMethods.push_back("GET"); allowedMethods.push_back("POST"); }
         std::vector<Directive>      directives;
         std::string                 path;
         std::string                 root;

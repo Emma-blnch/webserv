@@ -18,8 +18,9 @@ void Request::parseRequestLine(const std::string& line) {
         if (i == 0)
         {
             _method = token;
-            if (_method != "GET" && _method != "POST" && _method != "DELETE")
+            if (_method != "GET" && _method != "POST" && _method != "DELETE") // changer pour renovyer 405 et pas catch 400
                 throw std::runtime_error("Unsupported HTTP method: " + _method);
+            // faire en sorte que ca renvoi erreur 405 "Method Not Allowed" -> setStatus et setBody
         }
         else if (i == 1) {
             _path = token;

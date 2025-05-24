@@ -147,4 +147,6 @@ void Response::handleGET(const Request& req, const ServerBlock& server, const Lo
     setStatus(200);
     setBody(content.str());
     setHeader("Content-Type", mime);
+    // LOG
+    std::cout << "Méthode GET réussie" << std::endl;
 }
