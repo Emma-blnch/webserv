@@ -7,34 +7,38 @@
 
 bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
 {
-    // try to open location path
     if (location.path.empty())
     {
         std::cerr << "Config error: invalid location path: " << location.path << std::endl;
         return false; 
     }
+    std::map<std::string, std::string>  errorMessages;
+    errorMessages["index"] = "No index";
+    errorMessages["autoindex"] = "No autoindex";
+    errorMessages["allow_methods"] = "Empty allow_methods";
+    errorMessages["root"] = "No root";
+    errorMessages["client_max_body_size"] = "No client_max_body_size";
+    errorMessages["cgi_path"] = "No cgi_path";
+    errorMessages["upload_dir"] = "No upload_dir";
 
+    std::set<std::string>   acceptedDirectives;
+    for (std::map<std::string, std::string>::iterator it = errorMessages.begin(); it != errorMessages.end(); ++it){
+        acceptedDirectives.insert(it->first);
+    }
     for (size_t i = 0; i < location.directives.size(); ++i)
     {
         const   Directive& currentDir = location.directives[i];
-        if (currentDir.key == "index"){
-            if (currentDir.value.empty()){
-                LOG_ERR("No index");
-                return false;
-            }
+        if (acceptedDirectives.find(currentDir.key) == acceptedDirectives.end()){
+            std::cerr << "Erreur config: directive inconnue dans location : " << currentDir.key << "\n";
+            return false;
         }
-        else if (currentDir.key == "autoindex"){
-            if (currentDir.value.empty()){
-                LOG_ERR("No autoindex");
-                return false;
-            }
-        }
-        else if (currentDir.key == "allow_methods")
+        if (currentDir.value.empty())
         {
-            if (currentDir.value.empty()){
-                LOG_ERR("Empty allow_methods");
-                return false;
-            }
+            LOG_ERR(errorMessages[currentDir.key]);
+            return false;
+        }
+        if (currentDir.key == "allow_methods")
+        {
             std::vector<std::string>    methods  = splitLine(currentDir.value, " \t");
             for (size_t j = 0; j < methods.size(); ++j){
                 if (methods[j] != "GET" && methods[j] != "POST" && methods[j] != "DELETE"){
@@ -42,38 +46,6 @@ bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
                     return false;
                 }
             }       
-        }
-        else if (currentDir.key == "root"){
-            if (currentDir.value.empty())
-            {
-                LOG_ERR("No root");
-                return false;
-            }
-        }
-        else if (currentDir.key == "client_max_body_size"){
-            if (currentDir.value.empty())
-            {
-                LOG_ERR("No client_max_body_size");
-                return false;
-            }
-        }
-        else if (currentDir.key == "cgi_path"){
-            if (currentDir.value.empty())
-            {
-                LOG_ERR("No cgi_path");
-                return false;
-            }
-        }
-        else if (currentDir.key == "upload_dir"){
-            if (currentDir.value.empty())
-            {
-                LOG_ERR("No upload_dir");
-                return false;
-            }
-        }
-        else {
-            std::cerr << "Erreur config: directive inconnue dans location : " << currentDir.key << "\n";
-            return false;
         }
     }
     return true;
