@@ -46,18 +46,12 @@ std::string generateAutoIndex(const std::string& dirPath, const std::string& url
 void Response::handleGetDirectory(const std::string& dirPath, const std::string& urlPath, const ServerBlock& server, const LocationBlock* location) {
     std::vector<std::string> indexList;
     // si index dans bloc location
-    // for (size_t i = 0; i < location->index.size(); ++i){
-    //     std::cout << location->index[i] << std::endl;
-    // }
     if (location && !location->index.empty())
         indexList = location->index;
     // sinon je prends index du bloc server
     else if (!server.getIndex().empty())
     {
         indexList.insert(indexList.end(), server.getIndex().begin(), server.getIndex().end());
-        // for (size_t i = 0; i < indexList.size(); ++i){
-        //     std::cout << indexList[i] << std::endl;
-        // }
     }
     // sinon je met mon fichier de base
     else
@@ -89,7 +83,7 @@ void Response::handleGetDirectory(const std::string& dirPath, const std::string&
         }
     }
     // si pas index et autoindex activer
-    if (location && location->autoindex) {
+    if (location && location->autoindex == 1) {
         // genere HTML d'autoindex
         std::string html = generateAutoIndex(dirPath, urlPath);
         setStatus(200);
@@ -112,41 +106,74 @@ void Response::handleGET(const Request& req, const ServerBlock& server, const Lo
     std::string root = location ? location->root : server.getRoot();
     std::string relPath = req.getPath();
     if (location)
-        relPath = relPath.substr(location->path.length());
-    std::string fullPath = root + relPath;
-    if (access(fullPath.c_str(), F_OK) != 0) {
-        setStatus(404);
-        return;
+    {
+        if (relPath.length() >= location->path.length())
+            relPath = relPath.substr(location->path.length());
+        else
+            relPath = "";
+        std::string fullPath = root + location->path + relPath;
+            // Vérifier que je peux le lire
+        if (access(fullPath.c_str(), R_OK) != 0) {
+            setStatus(403);
+            return;
+        }
+        // Si c'est un dossier :
+        struct stat s;
+        // S_ISDIR(s.st_mode) = macro qui teste si le chemin pointer est dossier
+        if (stat(fullPath.c_str(), &s) == 0 && S_ISDIR(s.st_mode)) {
+            handleGetDirectory(fullPath, req.getPath(), server, location);
+            return;
+        }
+        // Si pas dossier, vérifier que j'arrive à bien lire tout le fichier
+        std::ifstream file(fullPath.c_str());
+        if (!file) {
+            setStatus(500);
+            return;
+        }
+        // Sinon, lire tout le contenu pour le mettre dans le body
+        std::ostringstream content;
+        content << file.rdbuf();
+        file.close();
+        // Déterminer le type MIME (Content-Type)
+        std::string ext = getExtension(fullPath);   // -> ".html"
+        std::string mime = guessContentType(ext); // -> "text/html"
+        // Préparer la réponse
+        setStatus(200);
+        setBody(content.str());
+        setHeader("Content-Type", mime);
     }
-    // Vérifier que je peux le lire
-    if (access(fullPath.c_str(), R_OK) != 0) {
-        setStatus(403);
-        return;
+    else
+    {
+        std::string fullPath = root + relPath; 
+        // Vérifier que je peux le lire
+        if (access(fullPath.c_str(), R_OK) != 0) {
+            setStatus(403);
+            return;
+        }
+        // Si c'est un dossier :
+        struct stat s;
+        // S_ISDIR(s.st_mode) = macro qui teste si le chemin pointer est dossier
+        if (stat(fullPath.c_str(), &s) == 0 && S_ISDIR(s.st_mode)) {
+            handleGetDirectory(fullPath, req.getPath(), server, location);
+            return;
+        }
+        // Si pas dossier, vérifier que j'arrive à bien lire tout le fichier
+        std::ifstream file(fullPath.c_str());
+        if (!file) {
+            setStatus(500);
+            return;
+        }
+        // Sinon, lire tout le contenu pour le mettre dans le body
+        std::ostringstream content;
+        content << file.rdbuf();
+        file.close();
+        // Déterminer le type MIME (Content-Type)
+        std::string ext = getExtension(fullPath);   // -> ".html"
+        std::string mime = guessContentType(ext); // -> "text/html"
+        // Préparer la réponse
+        setStatus(200);
+        setBody(content.str());
+        setHeader("Content-Type", mime);
     }
-    // Si c'est un dossier :
-    struct stat s;
-    // S_ISDIR(s.st_mode) = macro qui teste si le chemin pointer est dossier
-    if (stat(fullPath.c_str(), &s) == 0 && S_ISDIR(s.st_mode)) {
-        handleGetDirectory(fullPath, req.getPath(), server, location);
-        return;
-    }
-    // Si pas dossier, vérifier que j'arrive à bien lire tout le fichier
-    std::ifstream file(fullPath.c_str());
-    if (!file) {
-        setStatus(500);
-        return;
-    }
-    // Sinon, lire tout le contenu pour le mettre dans le body
-    std::ostringstream content;
-    content << file.rdbuf();
-    file.close();
-    // Déterminer le type MIME (Content-Type)
-    std::string ext = getExtension(fullPath);   // -> ".html"
-    std::string mime = guessContentType(ext); // -> "text/html"
-    // Préparer la réponse
-    setStatus(200);
-    setBody(content.str());
-    setHeader("Content-Type", mime);
-    // LOG
     std::cout << "Méthode GET réussie" << std::endl;
 }

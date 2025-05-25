@@ -17,10 +17,30 @@
     <section class="bottom">
         <section id="post">
             <h2>📤 POST</h2>
-            <form action="/upload" method="POST" enctype="multipart/form-data">
-                <input type="file" name="file">
+            <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
+                <input type="file" name="file" id="fileInput">
                 <button type="submit">Envoyer</button>
             </form>
+            <div id="postResult"></div>
+            <script>
+                document.getElementById('uploadForm').onsubmit = async function(e) {
+                    e.preventDefault();
+                    const form = e.target;
+                    const data = new FormData(form);
+                    const res = await fetch(form.action, { method: 'POST', body: data });
+                    const text = await res.text();
+                    document.getElementById('postResult').innerText =
+                        "Code HTTP: " + res.status + "\n" + text;
+                    if (res.status == 201) { // Affiche un lien vers le fichier si upload OK
+                        const input = document.getElementById('fileInput');
+                        if (input.files.length > 0) {
+                            const filename = input.files[0].name;
+                            document.getElementById('postResult').innerHTML +=
+                                `<br><a href="uploads/${filename}" target="_blank">Voir le fichier uploadé</a>`;
+                        }
+                    }
+            };
+            </script>
         </section>
 
         <section id="delete">
@@ -49,6 +69,6 @@
             <li><a href="page-inexistante.html">Lien cassé (404)</a></li>
             <li><a href="forbidden.html">Accès interdit (403)</a></li>
         </ul>
-    </section>    
+    </section>
 </body>
 </html>

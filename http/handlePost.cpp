@@ -52,7 +52,7 @@ void Response::handleMultipart(const std::string& body, const std::string& conte
         if (namePos != std::string::npos) {
             size_t nameEnd = headers.find("\"", namePos + 10);
             std::string filename = headers.substr(namePos + 10, nameEnd - namePos - 10);
-            std::ofstream out(("uploads/" + filename).c_str());
+            std::ofstream out(("www/uploads/" + filename).c_str());
             out << content;
             out.close();
         }

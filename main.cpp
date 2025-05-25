@@ -57,6 +57,12 @@ int main(int argc, char **argv) {
                 std::cerr << "Socket creation failed for " << host << ":" << port << std::endl;
                 return 1;
             }
+            int yes = 1;
+            if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0) {
+                std::cerr << "setsockopt(SO_REUSEADDR) failed\n";
+                close(serverSocket);
+                continue;
+            }
             sockaddr_in serverAddress;
             serverAddress.sin_family = AF_INET;
             serverAddress.sin_port = htons(port);

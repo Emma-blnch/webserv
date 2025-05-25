@@ -1,27 +1,33 @@
 # Autres modifs faites
-- dans fillLocationBlock modif de cette condition "if (hasIndex || !loc.index.empty())" en "(hasIndex)" car condition TOUJOURS vraie (-> hérite de l'index du server dans tous les cas donc il check l'index server dans le dossier location donc pas bon)
-
+- dans fillLocationBlock modif de cette condition "if (hasIndex || !loc.index.empty())" en "(hasIndex)" car condition TOUJOURS vraie (-> hérite de l'index du server dans tous les cas donc il check l'index server dans le dossier location donc pas bon)   
+- petit ajout dans le main pour ne plus avoir de bind fail quand on relance trop vite sur le meme hote port   
+- ajout d'une fonction dans ServerBlock.hpp pour mieux gérer le path réel du chemin renseigné dans un bloc location   
+- correction de handleGET pour gérer les requêtes sur fichier dans des blocs location   
 
 ---   
 # A faire 
-1. dans void Request::parseRequestLine(const std::string& line)
-renvoyer erreur 405 au lieu de 400 quand mauvaise méthode
+1. dans void Request::parseRequestLine(const std::string& line)   
+renvoyer erreur 405 au lieu de 400 quand mauvaise méthode   
 
-2. [OK] location "./" ne fonctionne pas
--> dans le fichier de config il faut mettre "location /" mais "root ./" pour que ça fonctionne sinon code était bon
+2. [OK] location "./" ne fonctionne pas   
+-> dans le fichier de config il faut mettre "location /" mais "root ./" pour que ça fonctionne sinon code était bon   
 
-3. Refacto fonctions pour lisibilité
--> découper en sous fonctions
--> s'assurer que chaque fichier a son hpp
--> s'assurer que les fonctions sont déclarées dans .hpp mais écrites dans .cpp
+3. Refacto fonctions pour lisibilité   
+-> découper en sous fonctions   
+-> s'assurer que chaque fichier a son hpp   
+-> s'assurer que les fonctions sont déclarées dans .hpp mais écrites dans .cpp   
 
-4. [OK] Initialiser dans le constructeur de LocationBlock   
-allowedMethods.push_back("GET") et POST
+4. [OK] Initialiser dans le constructeur de LocationBlock    
+allowedMethods.push_back("GET") et POST   
 
-5. Revoir page accueil HTML pour pouvoir tout tester dessus
+5. [OK?] Revoir page accueil HTML pour pouvoir tout tester dessus   
+-> méthodes GET POST et DELETE fonctionnent   
+-> est-ce qu'on rajoute autre chose ?   
 
-6. [OK] Rajouter message log quand une méthode a réussit
+6. [OK] Rajouter message log quand une méthode a réussit   
 -> ok pour GET POST et DELETE
+
+7. [OK] Correction de handlePOST pour pouvoir upload un fichier et le récupérer
 
 8. Tests finaux   
 Egalement faire :
