@@ -14,7 +14,7 @@ bool    ServerBlock::isValidClientBodySize(const Directive& directive)
 {
     if (directive.value.empty())
     {
-        std::cerr << "Config error: missing clientmaxbodysize\n";
+        LOG_ERR("Config error: missing clientmaxbodysize");
         return false;
     }
     std::string size = directive.value;
@@ -292,7 +292,7 @@ bool    ServerBlock::checkServerBlock()
             }
         }
         if (!hasValidIndex){
-            std::cerr << "Config error: cannot access any of indexes in server block\n";
+            LOG_ERR("Config error: cannot access any of indexes in server block");
             return false;
         }
         setIndexes(indexes);
@@ -306,7 +306,7 @@ bool    ServerBlock::checkServerBlock()
         }
     }
     if (!hasRoot){
-        std::cerr << "Config error: no root in server\n";
+        LOG_ERR("Config error: no root in server");
         return false;
     }
     return true;

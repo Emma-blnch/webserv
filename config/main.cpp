@@ -20,11 +20,11 @@
 //     }
 // }
 
-void    splitTester(std::string line) {
-    std::vector<std::string> array = splitLine(line, " \n\r");
-    for (std::vector<std::string>::const_iterator i = array.begin(); i != array.end(); ++i)
-        std::cout << *i << std::endl;
-}
+// void    splitTester(std::string line) {
+//     std::vector<std::string> array = splitLine(line, " \n\r");
+//     for (std::vector<std::string>::const_iterator i = array.begin(); i != array.end(); ++i)
+//         std::cout << *i << std::endl;
+// }
 
 int main(int ac, char **argv) {
     ConfigFile config;
@@ -34,10 +34,5 @@ int main(int ac, char **argv) {
     std::string conf = argv[1];
     if (!config.parseConfigFile(conf))
         return 0;
-    // std::string test = "     listen 8080;       #jeij f enfien fn enrfner jfio   \n";
-    // std::cout << removeCommentsAndEndSpaces(test) << std::endl;
-    config.displayConfig();
-    // splitTester("         bonjour TOUT D   le778 monde  \n");
-
     return 0;
 }

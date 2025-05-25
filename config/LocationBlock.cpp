@@ -29,7 +29,7 @@ bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
     {
         const   Directive& currentDir = location.directives[i];
         if (acceptedDirectives.find(currentDir.key) == acceptedDirectives.end()){
-            std::cerr << "Erreur config: directive inconnue dans location : " << currentDir.key << "\n";
+            std::cerr << "Config error: unknown directive: " << currentDir.key << std::endl;
             return false;
         }
         if (currentDir.value.empty())
@@ -64,20 +64,20 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
         const Directive& dir = loc.directives[i];
 
         if (seenDirectives.find(dir.key) != seenDirectives.end()){
-            std::cerr << "Erreur config: doublon directive " << dir.key << std::endl;
+            std::cerr << "Config error: duplicate directive " << dir.key << std::endl;
             return false;
         }
         seenDirectives.insert(dir.key);
         if (dir.key == "allow_methods") {
             loc.allowedMethods = splitLine(dir.value, " \t");
             if (loc.allowedMethods.empty()) {
-                LOG_ERR("allow_methods vide");
+                LOG_ERR("Config error: empty allow_methods");
                 return false;
             }
             for (size_t j = 0; j < loc.allowedMethods.size(); ++j) {
                 const std::string& method = loc.allowedMethods[j];
                 if (method != "GET" && method != "POST" && method != "DELETE") {
-                    std::cerr << "Erreur config: méthode non supportée : " << method << "\n";
+                    std::cerr << "Config error: method not allowed: " << method << std::endl;
                     return false;
                 }
             }
@@ -85,14 +85,14 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
         else if (dir.key == "root") {
             loc.root = dir.value;
             if (access(loc.root.c_str(), F_OK) != 0) {
-                std::cerr << "Erreur config: root inexistant : " << loc.root << "\n";
+                std::cerr << "Config error: cannot access root: " << loc.root << std::endl;
                 return false;
             }
         }
         else if (dir.key == "index") {
             loc.index = splitLine(dir.value, " \t");
             if (loc.index.empty()) {
-                LOG_ERR("index vide");
+                LOG_ERR("Config error: empty index");
                 return false;
             }
             hasIndex = true;
@@ -104,28 +104,28 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
             else if (dir.value == "off")
                 loc.autoindex = false;
             else {
-                std::cerr << "Wrong autodindex: must be on or off\n";
+                LOG_ERR("Config error: autoindex be on or off");
                 return false;
             }
         }
         else if (dir.key == "upload_dir") {
             loc.uploadDir = dir.value;
             if (access(loc.uploadDir.c_str(), W_OK) != 0) {
-                std::cerr << "Erreur config: upload_dir inaccessible ou inexistant : " << loc.uploadDir << "\n";
+                std::cerr << "Config error: cannot access upload_dir: " << loc.uploadDir << std::endl;
                 return false;
             }
         }
         else if (dir.key == "cgi_path") {
             loc.cgiPath = dir.value;
             if (access(loc.cgiPath.c_str(), X_OK) != 0) {
-                std::cerr << "Erreur config: cgi_path non exécutable : " << loc.cgiPath << "\n";
+                std::cerr << "Config error: cannot execute cgi_path: " << loc.cgiPath << std::endl;
                 return false;
             }
         }
         else if (dir.key == "client_max_body_size") {
             std::string sizeStr = dir.value;
             if (sizeStr.empty()) {
-                LOG_ERR("client_max_body_size vide dans location");
+                LOG_ERR("Config error: empty client_max_body_size");
                 return false;
             }
 
@@ -137,7 +137,7 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
                 else if (unit == 'g') size *= 1024 * 1024 * 1024;
             }
             if (size <= 0) {
-                LOG_ERR("Taille invalide pour client_max_body_size dans location");
+                LOG_ERR("Config error: invalid client_max_body_size");
                 return false;
             }
             loc.maxBodySize = static_cast<size_t>(size);
@@ -153,7 +153,7 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
             }
         }
         if (!hasValidIndex){
-            std::cerr << "Erreur config : cannot access any of indexes in location block\n";
+            LOG_ERR("Config error: cannot access any of indexes in location block");
             return false;
         }
     }

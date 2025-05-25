@@ -55,7 +55,7 @@ bool    ConfigFile::extractDirective(std::string& line, Directive& dir)
     std::pair<std::string, std::string> directive = parseDirective(line);
     if (directive.first.empty() || directive.second.empty())
     {
-        LOG_ERR("Directive vide");
+        LOG_ERR("Config error: empty directive");
         return false;
     }
     dir.key = directive.first;
@@ -77,7 +77,7 @@ bool    ConfigFile::extractLocationBlockContent(LocationBlock& location, std::if
         std::vector<std::string>    tokens = splitLine(line, " \t");
         if (isServerBlockStart(tokens)|| isLocationBlockStart(tokens))
         {
-            LOG_ERR("Bloc trouvé dans un bloc location");
+            LOG_ERR("Config error: found a block in location block");
             return false;
         }
         if (isDirective(line)){
@@ -88,16 +88,15 @@ bool    ConfigFile::extractLocationBlockContent(LocationBlock& location, std::if
         }
         else if (isBlockEnd(line))
         {
-            std::cout << "block end\n";
             return true;
         }
         else
         {
-            LOG_ERR("Un bloc location ne doit contenir que des directives");
+            LOG_ERR("Config error: a location block can only have directives");
             return false;
         }
     }
-    LOG_ERR("Bloc location ouvert");
+    LOG_ERR("Config error: found an open location block");
     return false;
 }
 
@@ -116,7 +115,7 @@ bool    ConfigFile::extractServerBlockContent(ServerBlock& server, std::ifstream
             return true;
         std::vector<std::string>    tokens = splitLine(line, " \t");
         if (isServerBlockStart(tokens)){
-            LOG_ERR("Un bloc server ne peut en contenir un autre");
+            LOG_ERR("Config error: a server block can have nothing but directives and location blocks");
             return false;
         }
         if (isLocationBlockStart(tokens)){
@@ -136,11 +135,11 @@ bool    ConfigFile::extractServerBlockContent(ServerBlock& server, std::ifstream
         }
         else
         {
-            LOG_ERR("Un bloc serveur ne doit contenir que des directives et des blocs location");
+            LOG_ERR("Config error: a server block can have nothing but directives and location blocks");
             return false;
         }
     }
-    std::cout << "Bloc server ouvert\n";
+    LOG_ERR("Config error: found an open server block");
     return false;
 }
 
@@ -155,7 +154,7 @@ bool    ConfigFile::extractServerBlocks(std::ifstream& file)
             continue ;
         std::vector<std::string>    tokens = splitLine(line, " \t");
         if (!isServerBlockStart(tokens)){
-            LOG_ERR("N'écrire que dans les blocs server");
+            LOG_ERR("Config error: cannot write outside server blocks");
             return false;
         }
         else
@@ -168,7 +167,7 @@ bool    ConfigFile::extractServerBlocks(std::ifstream& file)
     }
     if (_servers.empty())
     {
-        LOG_ERR("Aucun serveur trouvé");
+        LOG_ERR("Config error: no server has been found");
         return false;
     }
     return true;
@@ -178,10 +177,8 @@ bool    ConfigFile::checkServers()
 {
     for (size_t i = 0; i < _servers.size(); ++i)
     {
-        if (!_servers[i].checkServerBlock()){
-            std::cerr << "Error in server block n° " <<  i << std::endl;
+        if (!_servers[i].checkServerBlock())
             return false;
-        }
     }
     return true;
 }
