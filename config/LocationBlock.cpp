@@ -71,7 +71,7 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
         if (dir.key == "allow_methods") {
             loc.allowedMethods = splitLine(dir.value, " \t");
             if (loc.allowedMethods.empty()) {
-                LOG_ERR("Config error: empty allow_methods");
+                LOG_ERR("Empty allow_methods");
                 return false;
             }
             for (size_t j = 0; j < loc.allowedMethods.size(); ++j) {
@@ -92,7 +92,7 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
         else if (dir.key == "index") {
             loc.index = splitLine(dir.value, " \t");
             if (loc.index.empty()) {
-                LOG_ERR("Config error: empty index");
+                LOG_ERR("Empty index");
                 return false;
             }
             hasIndex = true;
@@ -104,7 +104,7 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
             else if (dir.value == "off")
                 loc.autoindex = false;
             else {
-                LOG_ERR("Config error: autoindex be on or off");
+                LOG_ERR("Autoindex be on or off");
                 return false;
             }
         }
@@ -125,7 +125,7 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
         else if (dir.key == "client_max_body_size") {
             std::string sizeStr = dir.value;
             if (sizeStr.empty()) {
-                LOG_ERR("Config error: empty client_max_body_size");
+                LOG_ERR("Empty client_max_body_size");
                 return false;
             }
 
@@ -137,7 +137,7 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
                 else if (unit == 'g') size *= 1024 * 1024 * 1024;
             }
             if (size <= 0) {
-                LOG_ERR("Config error: invalid client_max_body_size");
+                LOG_ERR("Invalid client_max_body_size");
                 return false;
             }
             loc.maxBodySize = static_cast<size_t>(size);
@@ -153,7 +153,7 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
             }
         }
         if (!hasValidIndex){
-            LOG_ERR("Config error: cannot access any of indexes in location block");
+            LOG_ERR("Cannot access any of indexes in location block");
             return false;
         }
     }

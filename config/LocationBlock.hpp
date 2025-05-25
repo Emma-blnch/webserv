@@ -13,7 +13,7 @@
 #include "ParsingUtils.hpp"
 #include "Directive.hpp"
 
-#define LOG_ERR(msg) std::cerr << "Erreur config\n" << msg << std::endl
+#define LOG_ERR(msg) std::cerr << "Config error\n" << msg << std::endl
 
 class ServerBlock;
 

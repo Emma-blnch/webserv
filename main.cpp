@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     }
     ConfigFile config;
     if (!config.parseConfigFile(argv[1])) {
-        std::cerr << "Erreur parsing config.\n";
+        // std::cerr << "Erreur parsing config.\n";
         return 1;
     }
     std::vector<ServerBlock> servers = config.getServers();
@@ -164,12 +164,21 @@ int main(int argc, char **argv) {
                     req.parseRawRequest(clientBuffers[clientFd]);
 
                     std::string hostHeader = req.getHeader("host");
+                    std::string hostName = hostHeader;
+                    size_t colon = hostHeader.find(':');
+                    if (colon != std::string::npos)
+                        hostName = hostHeader.substr(0, colon);
                     const ServerBlock* chosenServer = NULL;
                     for (size_t s = 0; s < serverBlocks.size(); ++s) {
-                        if (serverBlocks[s]->getServerName() == hostHeader) {
-                            chosenServer = serverBlocks[s];
-                            break;
+                        const std::vector<std::string>& names = serverBlocks[s]->getServerNames();
+                        for (size_t n = 0; n < names.size(); ++n) {
+                            if (hostName == names[n]) {
+                                chosenServer = serverBlocks[s];
+                                break;
+                            }
                         }
+                        if (chosenServer)
+                            break;
                     }
                     if (!chosenServer)
                         chosenServer = serverBlocks[0];
@@ -228,125 +237,3 @@ int main(int argc, char **argv) {
         close(sockets[i].fd);
     return 0;
 }
-
-
-// un seul server:
-
-// int main(int argc, char **argv) {
-//     if (argc < 2) {
-//         std::cerr << "Usage: ./webserv [CONFIG FILE].conf" << std::endl;
-//         return 1;
-//     }
-//     // parser fichier de config
-//     ConfigFile config;
-//     if (!config.parseConfigFile(argv[1])) {
-//         std::cerr << "Erreur parsing config.\n";
-//         return 1;
-//     }
-
-//     std::vector<ServerBlock> servers = config.getServers();
-//     if (servers.empty()) {
-//         std::cerr << "Aucun bloc serveur valide.\n";
-//         return 1;
-//     }
-
-//     const ServerBlock& server = servers[0];
-
-//     // créer une socket serveur
-//     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-//     if (serverSocket < 0) {
-//         std::cerr << "Socket creation failed\n";
-//         return 1;
-//     }
-
-//     // configurer son adresse
-//     sockaddr_in serverAddress;
-//     serverAddress.sin_family = AF_INET;
-//     serverAddress.sin_port = htons(server.getPort());
-//     std::cout << "port " << server.getPort() << std::endl;
-//     serverAddress.sin_addr.s_addr = inet_addr(server.getHost().c_str());
-//     std::cout << "host " << server.getHost() << std::endl;
-//     // serverAddress.sin_port = htons(8080);
-//     // serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
-
-//     // bind le socket à un certain port
-//     bind(serverSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
-
-//     // écouter les connexions
-//     listen(serverSocket, 5);
-
-//     // préparer poll avec socket serveur
-//     std::vector<struct pollfd> fds;
-//     struct pollfd serverFd;
-//     serverFd.fd = serverSocket;
-//     serverFd.events = POLLIN; // = "préviens moi quand il ya des connexions"
-//     fds.push_back(serverFd);
-
-//     char buffer[BUFFER_SIZE + 1];
-
-//     while (true) {
-//         int pollCount = poll(&fds[0], fds.size(), -1);
-//         if (pollCount < 0) {
-//             std::cerr << "Poll error\n";
-//             break;
-//         }
-
-//         // check qui a causé l'activité
-//         for (size_t i = 0; i < fds.size(); ++i) {
-//             if (fds[i].revents & POLLIN) { // revents contient évènements détectés
-//                 // si c serverSocket alors nouvelle connexion
-//                 if (fds[i].fd == serverSocket) {
-//                     int clientSocket = accept(serverSocket, NULL, NULL);
-//                     if (clientSocket >= 0) {
-//                         struct pollfd clientFd;
-//                         clientFd.fd = clientSocket;
-//                         clientFd.events = POLLIN;
-//                         fds.push_back(clientFd);
-//                     }
-//                 }
-//                 // si c un client existant je lis sa requête
-//                 else {
-//                     int clientFd = fds[i].fd;
-//                     int bytesRead = recv(clientFd, buffer, BUFFER_SIZE, 0);
-//                     if (bytesRead <= 0) {
-//                         std::cout << "Client disconnected\n";
-//                         close(clientFd);
-//                         fds.erase(fds.begin() + i);
-//                         --i;
-//                         continue;
-//                     }
-//                     buffer[bytesRead] = '\0';
-
-//                     try {
-//                         Request req;
-//                         req.parseRawRequest(buffer);
-                
-//                         Response res;
-//                         res.setErrorPages(server.getErrorPages());
-//                         res.buildFromRequest(req, server);
-//                         std::string responseStr = res.returnResponse();
-                
-//                         send(clientFd, responseStr.c_str(), responseStr.size(), 0);
-//                     } catch (const std::exception& e) {
-//                         std::cerr << "Erreur : " << e.what() << std::endl;
-                
-//                         // Envoi réponse 400
-//                         const char* errorResponse =
-//                             "HTTP/1.1 400 Bad Request\r\n"
-//                             "Content-Type: text/plain\r\n"
-//                             "Content-Length: 11\r\n"
-//                             "\r\n"
-//                             "Bad Request";
-//                         send(clientFd, errorResponse, strlen(errorResponse), 0);
-//                     }
-//                     close(clientFd);
-//                     fds.erase(fds.begin() + i);
-//                     --i;
-//                 }
-//             }
-//         }
-//     }
-
-//     close(serverSocket);
-//     return 0;
-// }

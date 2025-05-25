@@ -55,7 +55,7 @@ bool    ConfigFile::extractDirective(std::string& line, Directive& dir)
     std::pair<std::string, std::string> directive = parseDirective(line);
     if (directive.first.empty() || directive.second.empty())
     {
-        LOG_ERR("Config error: empty directive");
+        LOG_ERR("Empty directive");
         return false;
     }
     dir.key = directive.first;
@@ -71,13 +71,12 @@ bool    ConfigFile::extractLocationBlockContent(LocationBlock& location, std::if
     while (std::getline(file, line))
     {
         line = removeCommentsAndEndSpaces(line);
-        std::cout << "location block line: " << line << std::endl; 
         if (line.empty() || line[0] == '#')
             continue;
         std::vector<std::string>    tokens = splitLine(line, " \t");
         if (isServerBlockStart(tokens)|| isLocationBlockStart(tokens))
         {
-            LOG_ERR("Config error: found a block in location block");
+            LOG_ERR("Found a block in location block");
             return false;
         }
         if (isDirective(line)){
@@ -92,11 +91,11 @@ bool    ConfigFile::extractLocationBlockContent(LocationBlock& location, std::if
         }
         else
         {
-            LOG_ERR("Config error: a location block can only have directives");
+            LOG_ERR("A location block can only have directives");
             return false;
         }
     }
-    LOG_ERR("Config error: found an open location block");
+    LOG_ERR("Found an open location block");
     return false;
 }
 
@@ -108,14 +107,13 @@ bool    ConfigFile::extractServerBlockContent(ServerBlock& server, std::ifstream
     while (std::getline(file, line))
     {
         line = removeCommentsAndEndSpaces(line);
-        std::cout << line << std::endl;
         if (line.empty() || line[0] == '#')
             continue;
         if (isBlockEnd(line))
             return true;
         std::vector<std::string>    tokens = splitLine(line, " \t");
         if (isServerBlockStart(tokens)){
-            LOG_ERR("Config error: a server block can have nothing but directives and location blocks");
+            LOG_ERR("A server block can have nothing but directives and location blocks");
             return false;
         }
         if (isLocationBlockStart(tokens)){
@@ -135,11 +133,11 @@ bool    ConfigFile::extractServerBlockContent(ServerBlock& server, std::ifstream
         }
         else
         {
-            LOG_ERR("Config error: a server block can have nothing but directives and location blocks");
+            LOG_ERR("A server block can have nothing but directives and location blocks");
             return false;
         }
     }
-    LOG_ERR("Config error: found an open server block");
+    LOG_ERR("Found an open server block");
     return false;
 }
 
@@ -154,7 +152,7 @@ bool    ConfigFile::extractServerBlocks(std::ifstream& file)
             continue ;
         std::vector<std::string>    tokens = splitLine(line, " \t");
         if (!isServerBlockStart(tokens)){
-            LOG_ERR("Config error: cannot write outside server blocks");
+            LOG_ERR("Cannot write outside server blocks");
             return false;
         }
         else
@@ -167,7 +165,7 @@ bool    ConfigFile::extractServerBlocks(std::ifstream& file)
     }
     if (_servers.empty())
     {
-        LOG_ERR("Config error: no server has been found");
+        LOG_ERR("No server has been found");
         return false;
     }
     return true;
@@ -179,6 +177,18 @@ bool    ConfigFile::checkServers()
     {
         if (!_servers[i].checkServerBlock())
             return false;
+    }
+    // ---- CHECK DES DOUBLONS DE SERVER_NAME ----
+    std::set<std::string> allNames;
+    for (size_t i = 0; i < _servers.size(); ++i) {
+        const std::vector<std::string>& names = _servers[i].getServerNames();
+        for (size_t j = 0; j < names.size(); ++j) {
+            if (allNames.count(names[j])) {
+                std::cerr << "Duplicate server_name '" << names[j] << "' found." << std::endl;
+                return false;
+            }
+            allNames.insert(names[j]);
+        }
     }
     return true;
 }

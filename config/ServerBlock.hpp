@@ -30,6 +30,7 @@ class ServerBlock
         void    setPort(int port) { _port = port; }
         void    setRoot(const std::string& root) { _root = root; }
         void    setIndexes(const std::vector<std::string>& indexes) { _index = indexes; } 
+        void    setServerNames(const std::vector<std::string>& names) { _serverName = names; }
         void    setClientMaxBodySize(size_t size) { _clientMaxBodySize = size; }
         void    addErrorPage(int code, const std::string& path) { _errorPages[code] = path; }
         void    addLocation(const LocationBlock& loc) { _locations.push_back(loc); }
@@ -37,7 +38,7 @@ class ServerBlock
         // getters
         std::string     getHost() const{ return _host; };
         int             getPort() const { return _port; };
-        const std::string&  getServerName() const { return _serverName; };
+        const std::vector<std::string>& getServerNames() const { return _serverName; }
         const std::string&  getRoot() const { return _root; };
         const std::vector<std::string>& getIndex() const { return _index; };
         size_t          getClientMaxBodySize() const { return _clientMaxBodySize;};
@@ -50,7 +51,7 @@ class ServerBlock
         std::string                 _host;
         int                         _port;
         std::string                 _root;
-        std::string                 _serverName;
+        std::vector<std::string>    _serverName;
         std::vector<std::string>    _index;
         std::map<int, std::string>  _errorPages;
         size_t                      _clientMaxBodySize;

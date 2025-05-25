@@ -14,7 +14,7 @@ bool    ServerBlock::isValidClientBodySize(const Directive& directive)
 {
     if (directive.value.empty())
     {
-        LOG_ERR("Config error: missing clientmaxbodysize");
+        LOG_ERR("Missing clientmaxbodysize");
         return false;
     }
     std::string size = directive.value;
@@ -38,7 +38,7 @@ bool    ServerBlock::isValidClientBodySize(const Directive& directive)
         unit == "g" || unit == "G"){
             return true;
         }
-    LOG_ERR("Config error: invalid clientmaxbodysize");
+    LOG_ERR("Invalid clientmaxbodysize");
     return false;
 }
 
@@ -46,7 +46,7 @@ bool    ServerBlock::validateListen(const Directive& directive)
 {
     if (directive.value.empty())
     {
-        LOG_ERR("Config error: empty listen");
+        LOG_ERR("Empty listen");
         return false;
     }
     //  host::port format
@@ -64,7 +64,7 @@ bool    ServerBlock::validateListen(const Directive& directive)
             return false;
         if (port.empty())
         {
-            LOG_ERR("Config error: port is missing");
+            LOG_ERR("Port is missing");
             return false;
         }
         for (size_t i = 0; i < port.length(); ++i)
@@ -123,7 +123,7 @@ bool    ServerBlock::validateListen(const Directive& directive)
 bool    ServerBlock::isValidHost(const Directive& directive)
 {
     if (directive.value.empty()){
-        LOG_ERR("Config error: host is missing");
+        LOG_ERR("Host is missing");
         return false;
     }
     if (directive.value == "localhost" || directive.value == "0.0.0.0"){
@@ -187,6 +187,7 @@ bool    ServerBlock::checkServerBlock()
     std::vector<std::string>           indexes;
     bool    hasIndex = false;
     bool    hasRoot = false;
+    bool    hasServerName = false;
 
     for (size_t i = 0; i < directives.size(); ++i)
     {
@@ -205,14 +206,14 @@ bool    ServerBlock::checkServerBlock()
         else if (currentDir.key == "root"){
             if (currentDir.value.empty())
             {
-                LOG_ERR("Config error: no root");
+                LOG_ERR("No root");
                 return false;
             }
             hasRoot = true;
             std::string path = currentDir.value;
             int fd = open(path.c_str(), O_DIRECTORY);
             if (fd < 0) {
-                LOG_ERR("Config error: root is not a directory");
+                LOG_ERR("Root is not a directory");
                 return false;
             }
             close(fd);
@@ -220,7 +221,7 @@ bool    ServerBlock::checkServerBlock()
         }
         else if (currentDir.key == "index"){
             if (currentDir.value.empty()){
-                LOG_ERR("Config error: no index");
+                LOG_ERR("No index");
                 return false;
             }
             hasIndex = true;
@@ -242,18 +243,32 @@ bool    ServerBlock::checkServerBlock()
         }
         else if (currentDir.key == "server_name")
         {
-            if (currentDir.value.empty())
-            {
-                LOG_ERR("Config error: empty server_name");
+            if (hasServerName) { // pour éviter 2 server_name dans un meme bloc server ? d'ailleurs il faudrait ca pour tout non ?
+                LOG_ERR("Multiple server_name directives in one server block");
                 return false;
             }
-            _serverName = currentDir.value;
+            if (currentDir.value.empty())
+            {
+                LOG_ERR("Empty server_name");
+                return false;
+            }
+            std::vector<std::string> names = splitLine(currentDir.value, " \t");
+            std::set<std::string> localSet;
+            for (size_t k = 0; k < names.size(); ++k) {
+                if (localSet.count(names[k])) {
+                    std::cerr << "Duplicate server_name '" << names[k] << "' in the same server block." << std::endl;
+                    return false;
+                }
+                localSet.insert(names[k]);
+            }
+            hasServerName = true;
+            setServerNames(names);
         }
         else if (currentDir.key == "error_page")
         {
             if (currentDir.value.empty())
             {
-                LOG_ERR("Config error: missing error page(s)");
+                LOG_ERR("Missing error page(s)");
                 return false;
             }
             std::vector<std::string> errorPart = splitLine(currentDir.value, " \t");
@@ -261,7 +276,7 @@ bool    ServerBlock::checkServerBlock()
                 int code = std::atoi(errorPart[0].c_str());
                 std::map<int, std::string>::const_iterator it = errorStatus().find(code);
                 if (it == errorStatus().end()) {
-                    LOG_ERR("Config error: invalid error code");
+                    LOG_ERR("Invalid error code");
                     return false;
                 }
                 std::string path = errorPart[1];
@@ -272,7 +287,7 @@ bool    ServerBlock::checkServerBlock()
                 addErrorPage(code, path);
             }
             else {
-                LOG_ERR("Config error: error_page requires at least a code and a path");
+                LOG_ERR("Error_page requires at least a code and a path");
                 return false;
             }
         }
@@ -292,7 +307,7 @@ bool    ServerBlock::checkServerBlock()
             }
         }
         if (!hasValidIndex){
-            LOG_ERR("Config error: cannot access any of indexes in server block");
+            LOG_ERR("Cannot access any of indexes in server block");
             return false;
         }
         setIndexes(indexes);
@@ -301,12 +316,12 @@ bool    ServerBlock::checkServerBlock()
         if (!checkLocationBlock(_locations.back()))
             return false;
         if (!fillLocationBlock(_locations.back(), *this)) {
-            LOG_ERR("Config error: invalid location block");
+            LOG_ERR("Invalid location block");
             return false;
         }
     }
     if (!hasRoot){
-        LOG_ERR("Config error: no root in server");
+        LOG_ERR("No root in server");
         return false;
     }
     return true;
