@@ -27,12 +27,10 @@ class LocationBlock
         std::vector<std::string>    allowedMethods;
         std::vector<std::string>    index;
         bool                        autoindex;
-        std::string                 cgiPath; // chemin vers script exécutable ou interpréteur
-
+        std::string                 cgiPath;
 
         size_t maxBodySize;
-
-        std::string                 uploadDir; // destination des fichiers uploadés
+        std::string                 uploadDir;
 };
 
 bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server);

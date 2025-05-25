@@ -30,19 +30,13 @@ class ConfigFile {
         bool    isServerBlockStart(std::vector<std::string> tokens);
         bool    isBlockEnd(const std::string& line);
 
-
-
         bool    checkServers();
-
-        
-        void    displayConfig() const;
-
         const std::vector<ServerBlock>& getServers() const { return _servers; }
-        const std::string& getFileName() const { return _file; }
+
+        // void    displayConfig() const;
     
     private:
         std::vector<ServerBlock> _servers;
-        std::string _file;
 };
 
 #endif

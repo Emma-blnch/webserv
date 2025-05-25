@@ -54,15 +54,14 @@ bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
 
 bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
 {
-    std::set<std::string>   seenDirectives;
     bool    hasIndex = false;
+    std::set<std::string>   seenDirectives;
 
     loc.root = server.getRoot();
-    // loc.allowedMethods = server.getAllowedMethods();
-    // loc.autoindex = server.getAutoindex();
     loc.maxBodySize = server.getClientMaxBodySize();
     loc.index = server.getIndex();
-    for (size_t i = 0; i < loc.directives.size(); ++i) {
+    for (size_t i = 0; i < loc.directives.size(); ++i)
+    {
         const Directive& dir = loc.directives[i];
 
         if (seenDirectives.find(dir.key) != seenDirectives.end()){

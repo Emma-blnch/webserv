@@ -10,18 +10,13 @@ bool    ConfigFile::isServerBlockStart(std::vector<std::string> tokens)
 
 bool    ConfigFile::isLocationBlockStart(std::vector<std::string> tokens)
 {
-    if (tokens.size() == 3 && tokens[0] == "location" && tokens[2] == "{"){
-        return true;
-    }
-    return false;
+    return (tokens.size() == 3 && tokens[0] == "location" && tokens[2] == "{");
 }
 
 bool    ConfigFile::isBlockEnd(const std::string& line)
 {
-    std::string trimmedLine = removeCommentsAndEndSpaces(line);
-    return (trimmedLine == "}");
+    return (line == "}");
 }
-
 
 bool    ConfigFile::isDirective(const std::string& line)
 {
@@ -30,12 +25,13 @@ bool    ConfigFile::isDirective(const std::string& line)
 
 std::pair<std::string, std::string> ConfigFile::parseDirective(const std::string& line)
 {
-    std::pair<std::string, std::string> result;
-
     std::string cleanLine = line;
     size_t  semiColonPos = cleanLine.find(';');
+
     if (semiColonPos != std::string::npos)
         cleanLine = cleanLine.substr(0, semiColonPos);
+
+    std::pair<std::string, std::string> result;
     std::vector<std::string> tokens = splitLine(cleanLine, " \t");
     if (tokens.empty())
         return result;
@@ -127,20 +123,8 @@ bool    ConfigFile::extractServerBlockContent(ServerBlock& server, std::ifstream
             LocationBlock   location;
             std::string path = tokens[1];
             location.path = path;
-            // int fd = open(path.c_str(), O_DIRECTORY);
-            // if (fd < 0) {
-            //     std::cout << "Erreur: ce n'est pas un dossier\n";
-            //     return false;
-            // }
-            // close(fd);
-            // -> peut etre un path logique HTTP pas un repertoire réel ex:
-            // location /foo/ {
-            //       root www/dir;
-            //  }
-            // = l'url sera www/dir/fichier
             if (!extractLocationBlockContent(location, file))
                 return false;
-            // server._locations.push_back(location);
             server.addLocation(location);
         }
         else if (isDirective(line))
@@ -149,7 +133,6 @@ bool    ConfigFile::extractServerBlockContent(ServerBlock& server, std::ifstream
             if (!extractDirective(line, directive))
                 return false;
             server.directives.push_back(directive);
-            // std::cout << "Server directive: " << directive.key << " " << directive.value << std::endl;
         }
         else
         {
@@ -181,7 +164,6 @@ bool    ConfigFile::extractServerBlocks(std::ifstream& file)
             if (!extractServerBlockContent(currentServer, file))
                 return false;
             _servers.push_back(currentServer);
-            // std::cout << "Added server block\n";
         }
     }
     if (_servers.empty())
@@ -194,7 +176,8 @@ bool    ConfigFile::extractServerBlocks(std::ifstream& file)
 
 bool    ConfigFile::checkServers()
 {
-    for (size_t i = 0; i < _servers.size(); ++i){
+    for (size_t i = 0; i < _servers.size(); ++i)
+    {
         if (!_servers[i].checkServerBlock()){
             std::cerr << "Error in server block n° " <<  i << std::endl;
             return false;
@@ -207,16 +190,15 @@ bool    ConfigFile::checkServers()
 bool    ConfigFile::parseConfigFile(const std::string& filename)
 {
     std::ifstream file(filename.c_str());
+
     if (!file.is_open()){
         std::cerr << "Could not open "<< filename << "\n";
         return false;
     }
-    _file = filename;
-
     if (!extractServerBlocks(file)){
         file.close();
         return false;
     }
     file.close();
-    return checkServers(); // checkServerBlock.cpp
+    return checkServers();
 }
