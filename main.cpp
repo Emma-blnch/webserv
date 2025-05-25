@@ -214,12 +214,27 @@ int main(int argc, char **argv) {
                         --i;
                         continue;
                     }
+                    else if (errStr.rfind("405:", 0) == 0) { // si le message commence par "405:"
+                        const char* errorResponse =
+                            "HTTP/1.1 405 Method Not Allowed\r\n"
+                            "Content-Type: text/plain\r\n"
+                            "Allow: GET, POST, DELETE\r\n"
+                            "Content-Length: 23\r\n"
+                            "\r\n"
+                            "405 Method Not Allowed";
+                        send(clientFd, errorResponse, strlen(errorResponse), 0);
+                        close(clientFd);
+                        fds.erase(fds.begin() + i);
+                        clientBuffers.erase(clientFd);
+                        clientSocketToServer.erase(clientFd);
+                        --i;
+                        continue;
+                    }
                     else {
                         const char* errorResponse =
-                            "HTTP/1.1 405 Bad Request\r\n"
+                            "HTTP/1.1 400 Bad Request\r\n"
                             "Content-Type: text/plain\r\n"
                             "Content-Length: 11\r\n"
-                            "Allow: GET, POST, DELETE\r\n"
                             "\r\n"
                             "Bad Request";
                         send(clientFd, errorResponse, strlen(errorResponse), 0);
