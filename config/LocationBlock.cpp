@@ -60,8 +60,7 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
     loc.root = server.getRoot();
     loc.maxBodySize = server.getClientMaxBodySize();
     loc.index = server.getIndex();
-    for (size_t i = 0; i < loc.directives.size(); ++i)
-    {
+    for (size_t i = 0; i < loc.directives.size(); ++i){
         const Directive& dir = loc.directives[i];
 
         if (seenDirectives.find(dir.key) != seenDirectives.end()){

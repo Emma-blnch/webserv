@@ -80,7 +80,17 @@ std::set<std::string>    splitLineSet(std::string line, std::string delim)
     return (result);
 }
 
-#include <sstream>
+bool    pathMatches(const std::string& locPath, const std::string& reqPath) {
+    if (locPath.empty())
+        return false;
+    if (locPath == reqPath)
+        return true;
+    if (locPath.back() == '/' && locPath.length() > 1 && reqPath == locPath.substr(0, locPath.length() - 1))
+        return true;
+    if (reqPath.find(locPath) == 0)
+        return true;
+    return false;
+}
 
 // Remplace std::stoi(str) par :
 int asInt(const std::string& str) {
