@@ -216,9 +216,10 @@ int main(int argc, char **argv) {
                     }
                     else {
                         const char* errorResponse =
-                            "HTTP/1.1 400 Bad Request\r\n"
+                            "HTTP/1.1 405 Bad Request\r\n"
                             "Content-Type: text/plain\r\n"
                             "Content-Length: 11\r\n"
+                            "Allow: GET, POST, DELETE\r\n"
                             "\r\n"
                             "Bad Request";
                         send(clientFd, errorResponse, strlen(errorResponse), 0);
