@@ -9,7 +9,7 @@ bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
 {
     if (location.path.empty())
     {
-        std::cerr << "Config error: invalid location path: " << location.path << std::endl;
+        std::cerr << "Config error\nInvalid location path: " << location.path << std::endl;
         return false; 
     }
     std::map<std::string, std::string>  errorMessages;
@@ -29,7 +29,7 @@ bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
     {
         const   Directive& currentDir = location.directives[i];
         if (acceptedDirectives.find(currentDir.key) == acceptedDirectives.end()){
-            std::cerr << "Config error: unknown directive: " << currentDir.key << std::endl;
+            std::cerr << "Config error\nUnknown directive: " << currentDir.key << std::endl;
             return false;
         }
         if (currentDir.value.empty())
@@ -42,7 +42,7 @@ bool    ServerBlock::checkLocationBlock(const LocationBlock& location)
             std::vector<std::string>    methods  = splitLine(currentDir.value, " \t");
             for (size_t j = 0; j < methods.size(); ++j){
                 if (methods[j] != "GET" && methods[j] != "POST" && methods[j] != "DELETE"){
-                    std::cerr << "Config error: method not allowed: " << methods[j] << std::endl;
+                    std::cerr << "Config error\nMethod not allowed: " << methods[j] << std::endl;
                     return false;
                 }
             }       
@@ -64,7 +64,7 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
         const Directive& dir = loc.directives[i];
 
         if (seenDirectives.find(dir.key) != seenDirectives.end()){
-            std::cerr << "Config error: duplicate directive " << dir.key << std::endl;
+            std::cerr << "Config error\nDuplicate directive " << dir.key << std::endl;
             return false;
         }
         seenDirectives.insert(dir.key);
@@ -77,7 +77,7 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
             for (size_t j = 0; j < loc.allowedMethods.size(); ++j) {
                 const std::string& method = loc.allowedMethods[j];
                 if (method != "GET" && method != "POST" && method != "DELETE") {
-                    std::cerr << "Config error: method not allowed: " << method << std::endl;
+                    std::cerr << "Config error\nMethod not allowed: " << method << std::endl;
                     return false;
                 }
             }
@@ -85,7 +85,7 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
         else if (dir.key == "root") {
             loc.root = dir.value;
             if (access(loc.root.c_str(), F_OK) != 0) {
-                std::cerr << "Config error: cannot access root: " << loc.root << std::endl;
+                std::cerr << "Config error\nCannot access root: " << loc.root << std::endl;
                 return false;
             }
         }
@@ -111,14 +111,14 @@ bool fillLocationBlock(LocationBlock& loc, const ServerBlock& server)
         else if (dir.key == "upload_dir") {
             loc.uploadDir = dir.value;
             if (access(loc.uploadDir.c_str(), W_OK) != 0) {
-                std::cerr << "Config error: cannot access upload_dir: " << loc.uploadDir << std::endl;
+                std::cerr << "Config error\nCannot access upload_dir: " << loc.uploadDir << std::endl;
                 return false;
             }
         }
         else if (dir.key == "cgi_path") {
             loc.cgiPath = dir.value;
             if (access(loc.cgiPath.c_str(), X_OK) != 0) {
-                std::cerr << "Config error: cannot execute cgi_path: " << loc.cgiPath << std::endl;
+                std::cerr << "Config error\nCannot execute cgi_path: " << loc.cgiPath << std::endl;
                 return false;
             }
         }

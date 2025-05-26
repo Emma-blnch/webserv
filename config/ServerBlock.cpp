@@ -71,19 +71,19 @@ bool    ServerBlock::validateListen(const Directive& directive)
         {
             if (!std::isdigit(port[i]))
             {
-                std::cerr << "Config error: " << port << ": invalid port\n";
+                std::cerr << "Config error\n" << port << ": invalid port\n";
                 return false;
             }
         }
         long   result = asLong(port);
         if (result < INT_MIN || result > INT_MAX || result <= 0 || result > 65535)
         {
-            std::cerr << "Config error: " << port << ": invalid port\n";
+            std::cerr << "Config error\n" << port << ": invalid port\n";
             return false;
         }
         std::pair<std::string, int> entry = std::make_pair(host, static_cast<int>(result));
         if (_listen.find(entry) != _listen.end()) {
-            std::cerr << "Config error: listen " << host << ":" << static_cast<int>(result) << " is already in server\n";
+            std::cerr << "Config error\nListen " << host << ":" << static_cast<int>(result) << " is already in server\n";
             return false;
         }
         else {
@@ -104,12 +104,12 @@ bool    ServerBlock::validateListen(const Directive& directive)
     long    result = asLong(directive.value);
     if (result < INT_MIN || result > INT_MAX || result <= 0 || result > 65535)
     {
-        std::cerr << "Config error: " << directive.value << " invalid port\n";
+        std::cerr << "Config error\n" << directive.value << " invalid port\n";
         return false;
     }
     std::pair<std::string, int> entry = std::make_pair(host, static_cast<int>(result));
     if (_listen.find(entry) != _listen.end()) {
-        std::cerr << "Config error: listen " << host << ":" <<  static_cast<int>(result) << " is already in server\n";
+        std::cerr << "Config error\nListen " << host << ":" <<  static_cast<int>(result) << " is already in server\n";
     }
     else {
         _listen.insert(entry);
@@ -143,19 +143,19 @@ bool    ServerBlock::isValidHost(const Directive& directive)
     }
     bytes.push_back(currentByte);
     if(bytes.size() != 4){
-        std::cerr << "Config error: Host (IP format) "<< host << " is invalid\n";
+        std::cerr << "Config error\nHost (IP format) "<< host << " is invalid\n";
         return false;
     }
     for (size_t i = 0; i < 4; ++i){
         for (size_t j = 0; j < bytes[i].size(); j++){
             if (!std::isdigit(bytes[i][j])){
-                std::cerr << "Config error: Host (IP format) "<< host << " is invalid\n";
+                std::cerr << "Config error\nHost (IP format) "<< host << " is invalid\n";
                 return false;
             }
         }
         int byteValue = asInt(bytes[i]);
         if (byteValue < 0 || byteValue > 255){
-            std::cerr << "Config error: Host (IP format) "<< host << " is invalid\n";
+            std::cerr << "Config error\nHost (IP format) "<< host << " is invalid\n";
             return false;
         }
     }
@@ -187,7 +187,6 @@ bool    ServerBlock::checkServerBlock()
     std::vector<std::string>           indexes;
     bool    hasIndex = false;
     bool    hasRoot = false;
-    bool    hasServerName = false;
 
     for (size_t i = 0; i < directives.size(); ++i)
     {
@@ -195,9 +194,10 @@ bool    ServerBlock::checkServerBlock()
 
         if (seenDirectives.find(currentDir.key) != seenDirectives.end())
         {
-            std::cerr << "Config error: duplicate directive: " << currentDir.key << std::endl;
+            std::cerr << "Config error\nDuplicate directive: " << currentDir.key << std::endl;
             return false;
         }
+        seenDirectives.insert(currentDir.key);
         if (currentDir.key == "listen")
         {
             if (!validateListen(currentDir))
@@ -243,10 +243,6 @@ bool    ServerBlock::checkServerBlock()
         }
         else if (currentDir.key == "server_name")
         {
-            if (hasServerName) { // pour éviter 2 server_name dans un meme bloc server ? d'ailleurs il faudrait ca pour tout non ?
-                LOG_ERR("Multiple server_name directives in one server block");
-                return false;
-            }
             if (currentDir.value.empty())
             {
                 LOG_ERR("Empty server_name");
@@ -261,7 +257,6 @@ bool    ServerBlock::checkServerBlock()
                 }
                 localSet.insert(names[k]);
             }
-            hasServerName = true;
             setServerNames(names);
         }
         else if (currentDir.key == "error_page")
@@ -281,7 +276,7 @@ bool    ServerBlock::checkServerBlock()
                 }
                 std::string path = errorPart[1];
                 if (access(path.c_str(), F_OK) != 0) {
-                    std::cerr << "Config error: cannot found error page " << path << std::endl;
+                    std::cerr << "Config error\nCannot found error page " << path << std::endl;
                     return false;
                 }
                 addErrorPage(code, path);
@@ -293,7 +288,7 @@ bool    ServerBlock::checkServerBlock()
         }
         else
         {
-            std::cerr << "Config error: directive " << directives[i].key << " is not allowed\n";
+            std::cerr << "Config error\nDirective " << directives[i].key << " is not allowed\n";
             return false;
         }
     }
@@ -316,7 +311,7 @@ bool    ServerBlock::checkServerBlock()
         if (!checkLocationBlock(_locations.back()))
             return false;
         if (!fillLocationBlock(_locations.back(), *this)) {
-            LOG_ERR("Invalid location block");
+            // LOG_ERR("Invalid location block");
             return false;
         }
     }
