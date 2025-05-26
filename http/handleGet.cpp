@@ -112,7 +112,7 @@ void Response::handleGET(const Request& req, const ServerBlock& server, const Lo
         else
             relPath = "";
         std::string fullPath = root + location->path + relPath;
-            // Vérifier que je peux le lire
+        // Vérifier que je peux le lire
         if (access(fullPath.c_str(), R_OK) != 0) {
             setStatus(403);
             return;
@@ -145,6 +145,10 @@ void Response::handleGET(const Request& req, const ServerBlock& server, const Lo
     else
     {
         std::string fullPath = root + relPath; 
+        if (access(fullPath.c_str(), F_OK) != 0) {
+            setStatus(404);
+            return;
+        }
         // Vérifier que je peux le lire
         if (access(fullPath.c_str(), R_OK) != 0) {
             setStatus(403);

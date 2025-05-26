@@ -230,6 +230,21 @@ int main(int argc, char **argv) {
                         --i;
                         continue;
                     }
+                    else if (errStr.rfind("Unsupported HTTP version: ", 0) == 0) {
+                        const char* errorResponse =
+                            "HTTP/1.1 505 HTTP Version Not Supported\r\n"
+                            "Content-Type: text/plain\r\n"
+                            "Content-Length: 30\r\n"
+                            "\r\n"
+                            "505 HTTP Version Not Supported";
+                        send(clientFd, errorResponse, strlen(errorResponse), 0);
+                        close(clientFd);
+                        fds.erase(fds.begin() + i);
+                        clientBuffers.erase(clientFd);
+                        clientSocketToServer.erase(clientFd);
+                        --i;
+                        continue;
+                    }
                     else {
                         const char* errorResponse =
                             "HTTP/1.1 400 Bad Request\r\n"
