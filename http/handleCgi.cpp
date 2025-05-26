@@ -60,13 +60,14 @@ void Response::handleCGI(const Request& req, const LocationBlock* location, cons
         return;
     }
     // generer chemin selon location block
-    std::string scriptPath;
-    if (location && !location->root.empty()) {
-        scriptPath = location->root + req.getPath().substr(location->path.length());
-    }
-    else {
-        scriptPath = ".." + req.getPath();
-    }
+    std::string scriptRel = req.getPath().substr(location->path.length());
+    std::string scriptPath = location->root;
+    if (scriptPath.empty() || scriptPath[scriptPath.size()-1] != '/')
+        scriptPath += "/";
+    scriptPath += location->path;
+    if (!scriptPath.empty() && scriptPath[scriptPath.size()-1] != '/')
+        scriptPath += "/";
+    scriptPath += scriptRel;
     // vérifier que le script existe et est exécutable
     if (!checkFilePermissions(scriptPath, F_OK, 404)) return;
     if (!checkFilePermissions(scriptPath, X_OK, 403)) return;
