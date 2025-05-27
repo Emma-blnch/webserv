@@ -99,6 +99,7 @@ int main(int argc, char **argv) {
         struct pollfd serverFd;
         serverFd.fd = sockets[i].fd;
         serverFd.events = POLLIN;
+        serverFd.revents = 0;
         fds.push_back(serverFd);
     }
     std::map<int, size_t> clientSocketToServer;
@@ -128,6 +129,7 @@ int main(int argc, char **argv) {
                     struct pollfd clientFd;
                     clientFd.fd = clientSocket;
                     clientFd.events = POLLIN;
+                    clientFd.revents = 0;
                     fds.push_back(clientFd);
                     clientSocketToServer[clientSocket] = serverIndex;
                 }
