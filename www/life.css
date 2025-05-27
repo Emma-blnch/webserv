@@ -41,3 +41,26 @@ html {
 .canards h2 {
     padding: 15px;
 }
+
+#accueil {
+    display: flex;
+    flex-direction: column;
+    margin: 20px;
+    align-items: center;
+}
+
+
+#accueil a {
+    text-decoration: none;
+    color: #ffa600;
+    border: solid #333;
+    background-color: #333;
+    border-radius: 30px;
+    padding: 10px 45px;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+#accueil a:hover {
+    background-color: whitesmoke;
+}

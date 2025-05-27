@@ -23,6 +23,14 @@ struct SocketData {
     std::vector<const ServerBlock*> serverBlocks;
 };
 
+void cleanUpConnection(int clientFd, std::string const& responseStr, std::vector<struct pollfd>& fds, std::map<int, std::string>& clientBuffers, std::map<int, size_t>& clientSocketToServer, size_t i) {
+    send(clientFd, responseStr.c_str(), responseStr.size(), 0);
+    close(clientFd);
+    fds.erase(fds.begin() + i);
+    clientBuffers.erase(clientFd);
+    clientSocketToServer.erase(clientFd);
+}
+
 int main(int argc, char **argv) {
     if (argc < 2) {
         std::cerr << "Usage: ./webserv [CONFIG FILE].conf" << std::endl;
@@ -30,7 +38,6 @@ int main(int argc, char **argv) {
     }
     ConfigFile config;
     if (!config.parseConfigFile(argv[1])) {
-        // std::cerr << "Erreur parsing config.\n";
         return 1;
     }
     std::vector<ServerBlock> servers = config.getServers();
@@ -148,11 +155,7 @@ int main(int argc, char **argv) {
                         "Content-Length: 22\r\n"
                         "\r\n"
                         "413 Payload Too Large";
-                    send(clientFd, errorResponse, strlen(errorResponse), 0);
-                    close(clientFd);
-                    fds.erase(fds.begin() + i);
-                    clientBuffers.erase(clientFd);
-                    clientSocketToServer.erase(clientFd);
+                    cleanUpConnection(clientFd, errorResponse, fds, clientBuffers, clientSocketToServer, i);
                     --i;
                     continue;
                 }
@@ -187,12 +190,7 @@ int main(int argc, char **argv) {
                     res.setErrorPages(chosenServer->getErrorPages());
                     res.buildFromRequest(req, *chosenServer);
                     std::string responseStr = res.returnResponse();
-                    send(clientFd, responseStr.c_str(), responseStr.size(), 0);
-
-                    close(clientFd);
-                    fds.erase(fds.begin() + i);
-                    clientBuffers.erase(clientFd);
-                    clientSocketToServer.erase(clientFd);
+                    cleanUpConnection(clientFd, responseStr, fds, clientBuffers, clientSocketToServer, i);
                     --i;
                 } catch (const std::runtime_error& e) {
                     std::string errStr = e.what();
@@ -206,11 +204,7 @@ int main(int argc, char **argv) {
                             "Content-Length: 22\r\n"
                             "\r\n"
                             "413 Payload Too Large";
-                        send(clientFd, errorResponse, strlen(errorResponse), 0);
-                        close(clientFd);
-                        fds.erase(fds.begin() + i);
-                        clientBuffers.erase(clientFd);
-                        clientSocketToServer.erase(clientFd);
+                        cleanUpConnection(clientFd, errorResponse, fds, clientBuffers, clientSocketToServer, i);
                         --i;
                         continue;
                     }
@@ -222,11 +216,7 @@ int main(int argc, char **argv) {
                             "Content-Length: 23\r\n"
                             "\r\n"
                             "405 Method Not Allowed";
-                        send(clientFd, errorResponse, strlen(errorResponse), 0);
-                        close(clientFd);
-                        fds.erase(fds.begin() + i);
-                        clientBuffers.erase(clientFd);
-                        clientSocketToServer.erase(clientFd);
+                        cleanUpConnection(clientFd, errorResponse, fds, clientBuffers, clientSocketToServer, i);
                         --i;
                         continue;
                     }
@@ -237,11 +227,7 @@ int main(int argc, char **argv) {
                             "Content-Length: 30\r\n"
                             "\r\n"
                             "505 HTTP Version Not Supported";
-                        send(clientFd, errorResponse, strlen(errorResponse), 0);
-                        close(clientFd);
-                        fds.erase(fds.begin() + i);
-                        clientBuffers.erase(clientFd);
-                        clientSocketToServer.erase(clientFd);
+                        cleanUpConnection(clientFd, errorResponse, fds, clientBuffers, clientSocketToServer, i);
                         --i;
                         continue;
                     }
@@ -252,11 +238,7 @@ int main(int argc, char **argv) {
                             "Content-Length: 11\r\n"
                             "\r\n"
                             "Bad Request";
-                        send(clientFd, errorResponse, strlen(errorResponse), 0);
-                        close(clientFd);
-                        fds.erase(fds.begin() + i);
-                        clientBuffers.erase(clientFd);
-                        clientSocketToServer.erase(clientFd);
+                        cleanUpConnection(clientFd, errorResponse, fds, clientBuffers, clientSocketToServer, i);
                         --i;
                         continue;
                     }
@@ -268,3 +250,9 @@ int main(int argc, char **argv) {
         close(sockets[i].fd);
     return 0;
 }
+
+
+// GET sur server_name particulier : curl -v --resolve bar.com:8080:127.0.0.1 http://bar.com:8080/
+// POST sur cgi : curl -X POST -d "test=bonjour" --resolve bar.com:8080:127.0.0.1 http://bar.com:8080/cgi-bin/post.py
+// POST classique : curl -X POST -d "test=bonjour" --resolve bar.com:8080:127.0.0.1 http://bar.com:8080/
+// PUT (not allowed) : curl -v -X PUT -d "bonjour" --resolve bar.com:8080:127.0.0.1 http://bar.com:8080/

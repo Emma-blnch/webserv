@@ -85,7 +85,7 @@ bool    pathMatches(const std::string& locPath, const std::string& reqPath) {
         return false;
     if (locPath == reqPath)
         return true;
-    if (locPath.back() == '/' && locPath.length() > 1 && reqPath == locPath.substr(0, locPath.length() - 1))
+    if (locPath[locPath.length() - 1] == '/' && locPath.length() > 1 && reqPath == locPath.substr(0, locPath.length() - 1))
         return true;
     if (reqPath.find(locPath) == 0)
         return true;

@@ -122,16 +122,41 @@ void Response::handleCGI(const Request& req, const LocationBlock* location, cons
         exit(1);
     }
     else { // PARENT
-        close(pipefd[1]); // lit la sortie du script
+        close(pipefd[1]); // ferme ecriture pipe
         if (req.getMethod() == "POST") {
             close(inputPipe[0]);
             // ecrit le body dans entree du cgi
             write(inputPipe[1], req.getBody().c_str(), req.getBody().size());
             close(inputPipe[1]);
         }
+        // --- Timeout sur le processus CGI ---
+        int status;
+        const int TIMEOUT_SECONDS = 3; // à adapter si besoin
+        time_t start = time(NULL);
+        bool timed_out = false;
+        while (true) {
+            pid_t result = waitpid(pid, &status, WNOHANG);
+            if (result == pid) {
+                break; // process fini, break et on lit la sortie
+            }
+            if (difftime(time(NULL), start) > TIMEOUT_SECONDS) {
+                // Timeout !
+                timed_out = true;
+                kill(pid, SIGKILL); // tue le CGI
+                waitpid(pid, NULL, 0);
+                break;
+            }
+            usleep(10000); // sleep 10 ms
+        }
+        if (timed_out == true) {
+            setStatus(504);
+            setBody("504 Gateway Timeout: CGI script took too long");
+            setHeader("Content-Type", "text/plain");
+            close(pipefd[0]); // ferme le pipe pour éviter la lecture derrière
+            return;
+        }
+        // Si pas timeout, lit la sortie du CGI normalement
         std::string output = readCGIOutput(pipefd[0]);
-        waitpid(pid, NULL, 0); // attend fin du processus enfant
-        // préparer la réponse
         setStatus(200);
         setBody(output);
         setHeader("Content-Type", "text/plain");

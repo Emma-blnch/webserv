@@ -16,6 +16,7 @@ const std::map<int, std::string>& getValidStatus() {
         m[414] = "URI Too Long";
         m[500] = "Internal Server Error";
         m[501] = "Not Implemented";
+        m[504] = "Gateway Timeout";
         m[505] = "HTTP Version Not Supported";
     }
     return m;

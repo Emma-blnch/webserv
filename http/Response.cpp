@@ -10,16 +10,14 @@ void Response::loadErrorPageIfNeeded() {
         std::string path = it->second;
         std::ifstream file(path.c_str());
         if (file) {
-            std::cout << "page loaded : " << path << std::endl;
+            std::cout << "Page loaded : " << path << std::endl;
             std::ostringstream content;
             content << file.rdbuf();
             file.close();
             setBody(content.str());
             setHeader("Content-Type", "text/html");
-        } else {
-            // fallback si le fichier HTML d'erreur n'existe pas
-            setBody(getValidStatus().at(_status));
-        }
+        } else
+            setBody(getValidStatus().at(_status)); // fallback si le fichier HTML d'erreur n'existe pas
     }
 }
 

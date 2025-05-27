@@ -66,6 +66,8 @@ class Response {
         std::string readCGIOutput(int fd);
         void handleGetDirectory(const std::string& dirPath, const std::string& urlPath, const ServerBlock& server, const LocationBlock* location);
         bool checkFilePermissions(const std::string& file, int mode, int errorCode);
+
+        int getStatus() const { return _status; }
 };
 
 #endif
