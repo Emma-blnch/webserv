@@ -32,7 +32,7 @@ void cleanUpConnection(int clientFd, std::string const& responseStr, std::vector
 }
 
 int main(int argc, char **argv) {
-    if (argc < 2) {
+    if (argc != 2) {
         std::cerr << "Usage: ./webserv [CONFIG FILE].conf" << std::endl;
         return 1;
     }
@@ -258,3 +258,7 @@ int main(int argc, char **argv) {
 // POST sur cgi : curl -X POST -d "test=bonjour" --resolve bar.com:8080:127.0.0.1 http://bar.com:8080/cgi-bin/post.py
 // POST classique : curl -X POST -d "test=bonjour" --resolve bar.com:8080:127.0.0.1 http://bar.com:8080/
 // PUT (not allowed) : curl -v -X PUT -d "bonjour" --resolve bar.com:8080:127.0.0.1 http://bar.com:8080/
+// SIEGE : siege -v -c 100 -r 100 -v http://bar.com:8080/
+// -> 100 clients font 100 requetes GET
+// SIEGE POST : siege -c 10 -r 100 -v --content-type "application/x-www-form-urlencoded" 'http://127.0.0.1:8080/cgi-bin/post.py POST name=emma'
+// SIEGE CGI : siege -c 10 -r 100 http://127.0.0.1:8080/cgi-bin/hello.py
