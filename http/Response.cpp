@@ -89,6 +89,8 @@ std::string Response::returnResponse() const {
     response << "HTTP/1.1 " << _status << " " << _stateMsg << "\r\n";
     // 2. Headers
     for (std::map<std::string, std::string>::const_iterator it = _headers.begin(); it != _headers.end(); ++it) {
+        if ((_status == 204 || _status == 304) && (it->first == "content-type" || it->first == "content-length"))
+            continue; // skip ces headers pour 204/304
         response << it->first << ": " << it->second << "\r\n";
     }
     // 2.2 Expliciter fermeture de la connexion
