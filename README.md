@@ -28,6 +28,17 @@ A team project from 42 Paris: implement a non-blocking HTTP server in C++98.
 
 ## 🧠 What we learned
 
+- **Working in pairs:** shared version management, permanent communication and joint decision-making on code architecture.  
+
+- **Organization and rigor:** division of the project into modules (config parser, query management, responses, CGI, etc.), compliance with 42 standards (Makefile, Norme, error management).  
+
+- **Solving complex problems:** managing redirects, pipes (`fork`/`execve`/`dup2`), CGI timeout, and handling HTTP/1.1 borderline cases (fragmented requests, non-blocking client and server).  
+
+- **Reading and interpretation of system documentation:** understanding and use of system calls such as `socket`, `bind`, `listen`, `accept`, `poll`, `fork`, `execve`, `waitpid`, `dup2`, `access`, `stat`, etc.  
+
+- **Autonomy and perseverance:** debugging recalcitrant bugs (signal management, timeouts, memory leaks), cross-testing with `curl`, `siege` and `valgrind`, and comparing our behavior with that of Nginx.  
+
+- **Robustness:** write code that is resilient to client errors (ill-formed requests, overly large bodies, buggy CGIs), while ensuring that no crashes or hangs occur, even under heavy load.
 
 ## 🧪 Prerequisites
 
