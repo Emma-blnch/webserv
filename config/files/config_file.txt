@@ -1,6 +1,0 @@
-- Port et host de chaque serveur
-- Setup server_names ou pas
-- Le premier serveur pour un host:port sera le serveur par défaut pour cet host:port (il répondra à toutes les requêtes qui n'appartiennent pas à un autre serveur)
-- Setup des pages d'erreur par défaut
-- Limiter la taille du body des clients
-- Setup des routes avec une ou plusieurs des règles/configurations suivantes : définir une liste des méthodes HTTP acceptées pour la route, définir une redirection HTTP, définir un répertoire ou un fichier à partir duquel le fichier doit être recherché (par exemple si l'url /kapouet est rootée sur /tmp/www, l'url /kapouet/pouic/toto/pouet est /tmp/www/pouic/toto/pouet), activer/désactiver le listing des répertoires, set un fichier par défaut comme réponse si la requête est un répertoire, exécuter CGI en fonction de certaines extextensions de fichier (par exemple .php), faites-le fonctionner avec les méthodes POST et GET, rendre la route capable d'accepter les fichiers téléversés et configuerer où cela doit être enregistré. 
